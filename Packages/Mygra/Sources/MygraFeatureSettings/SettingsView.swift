@@ -436,10 +436,22 @@ public struct SettingsView: View {
             creditRow(title: "Developer", name: "Nick Molargik", url: "https://www.linkedin.com/in/nicholas-molargik/", systemImage: "hammer.fill", tint: .mygraBlue)
             creditRow(title: "Graphics", name: "Rahul Parmar", url: "https://www.linkedin.com/in/rpn4499/", systemImage: "paintpalette.fill", tint: .mygraPurple)
             creditRow(title: "Publisher", name: "Molargik Software LLC", url: "https://www.molargiksoftware.com", systemImage: "building.2.fill", tint: .indigo)
+            Link(destination: Self.writeReviewURL) {
+                Label("Rate Mygra", systemImage: "star.fill")
+                    .labelStyle(.settingsIcon(.orange))
+            }
+            .accessibilityHint("Opens the App Store")
+            ShareLink(item: Self.shareURL, message: Text("Mygra is a simple migraine diary for iPhone and Apple Watch.")) {
+                Label("Share Mygra", systemImage: "square.and.arrow.up.fill")
+                    .labelStyle(.settingsIcon(.mygraBlue))
+            }
         } header: {
             Text("About Mygra")
         }
     }
+
+    private static let writeReviewURL = URL(string: "https://apps.apple.com/app/id6747298583?action=write-review")!
+    private static let shareURL = URL(string: "https://molargiksoftware.com/go/mygra?ct=share_app")!
 
     private func creditRow(title: LocalizedStringKey, name: String, url: String, systemImage: String, tint: Color) -> some View {
         LabeledContent {
@@ -532,6 +544,9 @@ public struct SettingsView: View {
         runExport(kind: .csv) {
             let csv = MigraineReport.csv(migraines: migraineData.migraines, useMetricUnits: useMetricUnits)
             return try ExportFiles.writeTemporaryFile(Data(csv.utf8), fileExtension: "csv")
+        }
+        if viewModel.export?.kind == .csv {
+            migraineData.noteReportExported()
         }
     }
 

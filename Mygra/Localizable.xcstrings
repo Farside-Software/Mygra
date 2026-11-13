@@ -24660,6 +24660,78 @@
         }
       },
       "shouldGenerateSymbol" : false
+    },
+    "Rate Mygra" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valorar Mygra"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Évaluer Mygra"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mygraを評価"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "Share Mygra" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir Mygra"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager Mygra"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mygraを共有"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "Mygra is a simple migraine diary for iPhone and Apple Watch." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mygra es un diario de migrañas sencillo para iPhone y Apple Watch."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mygra est un journal de migraines simple pour iPhone et Apple Watch."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mygraは、iPhoneとApple Watchで使えるシンプルな片頭痛の記録アプリです。"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
     }
   },
   "version" : "1.1"
