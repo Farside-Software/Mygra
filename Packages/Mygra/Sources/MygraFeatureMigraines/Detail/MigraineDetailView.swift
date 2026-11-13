@@ -99,6 +99,10 @@ public struct MigraineDetailView: View {
         .navigationSubtitleIfAvailable(DateFormatting.date(migraine.startDate, useDMY: useDayMonthYearDates))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
+        .task {
+            // A calm moment to ask for a rating (the policy requires the migraine ended 24h+ ago).
+            migraineData.noteSummaryViewed(migraine)
+        }
         // The deferred "finish logging" prompt lands here and opens Modify, pre-filled.
         .onChange(of: attackMode.finishRequestID, initial: true) { _, requested in
             guard requested == migraine.id, !migraine.isOngoing else { return }

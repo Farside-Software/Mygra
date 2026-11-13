@@ -92,6 +92,7 @@ public struct DashboardView: View {
         .task {
             await refreshAll()
             await cycleData.refresh()
+            migraineData.noteInsightsOpened()
         }
         .fullScreenCover(isPresented: $viewModel.isShowingAssistant) {
             MigraineAssistantView()

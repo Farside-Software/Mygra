@@ -11,8 +11,13 @@ nonisolated public enum AppStorageKeys {
     public static let useDayMonthYearDates = "useDayMonthYearDates"
     public static let bgWeatherTaskScheduled = "bgWeatherTaskScheduled"
     public static let isOnboardingComplete = "isOnboardingComplete"
+    /// Legacy Bool flags, read only to migrate into `lastPromptedVersion`.
     public static let hasPromptedForFifthReview = "MigraineManager.hasPromptedForFifthReview"
     public static let hasPromptedForExportReview = "Review.hasPromptedAfterFirstExport"
+    /// App version (CFBundleShortVersionString) the rating prompt last appeared on.
+    public static let lastPromptedVersion = "Review.lastPromptedVersion"
+    /// Seconds since 1970 of the first launch that recorded it.
+    public static let firstLaunchDate = "Review.firstLaunchDate"
 
     // MARK: - Mygra Plus
     /// Cached grandfather verdict (absent = never checked).

@@ -31,13 +31,6 @@ struct DomainHelpersTests {
         #expect(abs(additions.waterLiters - 0.3) < 0.0001)
     }
 
-    @Test func reviewMilestonePromptsOnceOnFifth() {
-        #expect(ReviewMilestone.shouldPrompt(totalMigraines: 5, hasPrompted: false))
-        #expect(!ReviewMilestone.shouldPrompt(totalMigraines: 5, hasPrompted: true))
-        #expect(!ReviewMilestone.shouldPrompt(totalMigraines: 4, hasPrompted: false))
-        #expect(!ReviewMilestone.shouldPrompt(totalMigraines: 6, hasPrompted: false))
-    }
-
     @Test func onboardingStepsAdvanceInOrderAndStopAtTheEnd() {
         #expect(OnboardingStep.privacy.next == .location)
         #expect(OnboardingStep.user.next == .complete)

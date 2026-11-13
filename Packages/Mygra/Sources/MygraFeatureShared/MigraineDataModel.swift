@@ -38,6 +38,7 @@ public final class MigraineDataModel {
     @ObservationIgnored private let observeChanges: any ObserveMigraineChanges
     @ObservationIgnored private let reviewRequester: (any ReviewRequesting)?
     @ObservationIgnored private let defaults: any KeyValueStoring
+    @ObservationIgnored private let reviewPolicy: ReviewPromptPolicy
     @ObservationIgnored private let generateSampleDataUseCase: (any GenerateSampleData)?
     @ObservationIgnored private let toastManager: ToastManager
 
@@ -79,6 +80,8 @@ public final class MigraineDataModel {
         reviewRequester: (any ReviewRequesting)? = nil,
         defaults: any KeyValueStoring = UserDefaults.standard,
         generateSampleData: (any GenerateSampleData)? = nil,
+        appVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0",
+        now: @escaping () -> Date = Date.init,
         toastManager: ToastManager
     ) {
         self.loadMigraines = loadMigraines
@@ -97,6 +100,8 @@ public final class MigraineDataModel {
         self.observeChanges = observeChanges
         self.reviewRequester = reviewRequester
         self.defaults = defaults
+        self.reviewPolicy = ReviewPromptPolicy(store: defaults, appVersion: appVersion, now: now)
+        reviewPolicy.recordLaunch()
         self.generateSampleDataUseCase = generateSampleData
         self.toastManager = toastManager
         refresh()
@@ -145,14 +150,13 @@ public final class MigraineDataModel {
 
     // MARK: - Writes (failures toast; nothing is silently dropped)
 
-    /// Persists a new migraine and asks for a review on the fifth ever.
+    /// Persists a new migraine. Never asks for a rating: the person is mid-attack or just out of one.
     @discardableResult
     public func log(_ migraine: Migraine) -> Bool {
         let logged = surfacing(fallback: false) {
             try logMigraineUseCase(migraine)
             return true
         }
-        if logged { maybeRequestReview() }
         return logged
     }
 
@@ -225,21 +229,26 @@ public final class MigraineDataModel {
 
     // MARK: - Review prompt
 
-    /// Call after a PDF report has been produced: asks for a review once, on the first export.
+    /// Call after a PDF or CSV report has been produced.
     public func noteReportExported() {
-        guard let reviewRequester else { return }
-        let hasPrompted = defaults.bool(forKey: AppStorageKeys.hasPromptedForExportReview)
-        guard ReviewMilestone.shouldPromptAfterExport(hasPrompted: hasPrompted) else { return }
-        defaults.set(true, forKey: AppStorageKeys.hasPromptedForExportReview)
-        reviewRequester.requestReview()
+        requestReviewIfEligible(for: .reportExported)
     }
 
-    private func maybeRequestReview() {
+    /// Call when the dashboard opens.
+    public func noteInsightsOpened() {
+        let ended = migraines.compactMap(\.endDate).max()
+        requestReviewIfEligible(for: .insightsOpened(totalMigraines: migraines.count, mostRecentEnd: ended))
+    }
+
+    /// Call when a migraine's summary is viewed.
+    public func noteSummaryViewed(_ migraine: Migraine) {
+        requestReviewIfEligible(for: .summaryViewed(endedAt: migraine.endDate))
+    }
+
+    private func requestReviewIfEligible(for moment: ReviewPromptPolicy.Moment) {
         guard let reviewRequester else { return }
-        let hasPrompted = defaults.bool(forKey: AppStorageKeys.hasPromptedForFifthReview)
-        guard let total = try? countMigraines(),
-              ReviewMilestone.shouldPrompt(totalMigraines: total, hasPrompted: hasPrompted) else { return }
-        defaults.set(true, forKey: AppStorageKeys.hasPromptedForFifthReview)
+        guard reviewPolicy.shouldPrompt(for: moment, hasOngoingMigraine: ongoingMigraine != nil) else { return }
+        reviewPolicy.markPrompted()
         reviewRequester.requestReview()
     }
 

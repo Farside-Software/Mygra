@@ -149,11 +149,3 @@ struct PlusEntitlementCacheTests {
         #expect(cache.hasShownEarlySupporterThanks)
     }
 }
-
-@Suite("ReviewMilestone export")
-struct ReviewMilestoneExportTests {
-    @Test func promptsOnlyOnFirstExport() {
-        #expect(ReviewMilestone.shouldPromptAfterExport(hasPrompted: false))
-        #expect(ReviewMilestone.shouldPromptAfterExport(hasPrompted: true) == false)
-    }
-}

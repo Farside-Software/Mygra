@@ -4,7 +4,7 @@
 //
 //  Behavior tests for the shared view-facing models over the in-memory preview
 //  repositories: verb routing, change-stream refreshes, error toasting (never silent),
-//  the review milestone, and the insight model's reactions.
+//  the review prompt wiring, and the insight model's reactions.
 //
 
 import Foundation
@@ -44,6 +44,7 @@ private func makeMigraineData(
     toastManager: ToastManager = ToastManager(),
     reviewRequester: (any ReviewRequesting)? = nil,
     defaults: any KeyValueStoring = FakeKeyValueStore(),
+    now: @escaping () -> Date = Date.init,
     log: (any LogMigraine)? = nil
 ) -> MigraineDataModel {
     let update = UpdateMigraineUseCase(repository: repository)
@@ -65,6 +66,8 @@ private func makeMigraineData(
         observeChanges: ObserveMigraineChangesUseCase(center: repository.changeCenter),
         reviewRequester: reviewRequester,
         defaults: defaults,
+        appVersion: "1.0",
+        now: now,
         toastManager: toastManager
     )
 }
@@ -144,33 +147,82 @@ struct MigraineDataModelTests {
         #expect(toastManager.currentToast?.style == .error)
     }
 
-    @Test("the review prompt fires once, on the fifth migraine")
-    func reviewMilestone() {
+    @Test("logging a migraine never asks for a rating, however many exist")
+    func loggingNeverPrompts() {
         let requester = FakeReviewRequester()
         let defaults = FakeKeyValueStore()
+        defaults.set(Date().addingTimeInterval(-30 * 86_400).timeIntervalSince1970, forKey: AppStorageKeys.firstLaunchDate)
         let model = makeMigraineData(repository: PreviewMigraineRepository(), reviewRequester: requester, defaults: defaults)
         for index in 1...6 {
             model.log(Migraine(startDate: Date().addingTimeInterval(Double(-index)), endDate: Date(), painLevel: 3, stressLevel: 3))
         }
-        #expect(requester.requestCount == 1)
-        #expect(defaults.bool(forKey: AppStorageKeys.hasPromptedForFifthReview))
+        #expect(requester.requestCount == 0)
     }
 
-    @Test("the export review prompt fires once, after the first PDF export")
-    func exportReviewMilestone() {
+    @Test("a report export asks once per version, and not in the first three days")
+    func exportReviewPrompt() {
         let requester = FakeReviewRequester()
         let defaults = FakeKeyValueStore()
-        let model = makeMigraineData(repository: PreviewMigraineRepository(), reviewRequester: requester, defaults: defaults)
+        var clock = Date()
+        let model = makeMigraineData(repository: PreviewMigraineRepository(), reviewRequester: requester, defaults: defaults, now: { clock })
+        model.noteReportExported()
+        #expect(requester.requestCount == 0)
+        clock.addTimeInterval(4 * 86_400)
         model.noteReportExported()
         model.noteReportExported()
         #expect(requester.requestCount == 1)
-        #expect(defaults.bool(forKey: AppStorageKeys.hasPromptedForExportReview))
+        #expect(defaults.string(forKey: AppStorageKeys.lastPromptedVersion) == "1.0")
+    }
 
-        // Independent of the fifth-migraine milestone.
-        for index in 1...5 {
-            model.log(Migraine(startDate: Date().addingTimeInterval(Double(-index)), endDate: Date(), painLevel: 3, stressLevel: 3))
+    @Test("opening the dashboard asks only with 3+ migraines, the last ended 7+ days ago")
+    func insightsReviewPrompt() {
+        let requester = FakeReviewRequester()
+        let defaults = FakeKeyValueStore()
+        defaults.set(Date().addingTimeInterval(-30 * 86_400).timeIntervalSince1970, forKey: AppStorageKeys.firstLaunchDate)
+        let model = makeMigraineData(repository: PreviewMigraineRepository(), reviewRequester: requester, defaults: defaults)
+        for days in [20.0, 15, 3] {
+            model.log(Migraine(startDate: Date().addingTimeInterval(-days * 86_400 - 3_600), endDate: Date().addingTimeInterval(-days * 86_400), painLevel: 3, stressLevel: 3))
         }
-        #expect(requester.requestCount == 2)
+        model.noteInsightsOpened()
+        #expect(requester.requestCount == 0)
+        model.log(Migraine(startDate: Date().addingTimeInterval(-9 * 86_400 - 3_600), endDate: Date().addingTimeInterval(-9 * 86_400), painLevel: 3, stressLevel: 3))
+        // The newest end is still 3 days ago.
+        model.noteInsightsOpened()
+        #expect(requester.requestCount == 0)
+    }
+
+    @Test("the dashboard prompt fires when the latest migraine ended a week ago")
+    func insightsReviewPromptFires() {
+        let requester = FakeReviewRequester()
+        let defaults = FakeKeyValueStore()
+        defaults.set(Date().addingTimeInterval(-30 * 86_400).timeIntervalSince1970, forKey: AppStorageKeys.firstLaunchDate)
+        let model = makeMigraineData(repository: PreviewMigraineRepository(), reviewRequester: requester, defaults: defaults)
+        for days in [20.0, 15, 8] {
+            model.log(Migraine(startDate: Date().addingTimeInterval(-days * 86_400 - 3_600), endDate: Date().addingTimeInterval(-days * 86_400), painLevel: 3, stressLevel: 3))
+        }
+        model.noteInsightsOpened()
+        model.noteInsightsOpened()
+        #expect(requester.requestCount == 1)
+    }
+
+    @Test("a migraine summary asks only when it ended 24h+ ago and none is ongoing")
+    func summaryReviewPrompt() {
+        let requester = FakeReviewRequester()
+        let defaults = FakeKeyValueStore()
+        defaults.set(Date().addingTimeInterval(-30 * 86_400).timeIntervalSince1970, forKey: AppStorageKeys.firstLaunchDate)
+        let model = makeMigraineData(repository: PreviewMigraineRepository(), reviewRequester: requester, defaults: defaults)
+        let recent = Migraine(startDate: Date().addingTimeInterval(-3 * 3_600), endDate: Date().addingTimeInterval(-3_600), painLevel: 3, stressLevel: 3)
+        model.noteSummaryViewed(recent)
+        #expect(requester.requestCount == 0)
+
+        _ = model.start(painLevel: 5, stressLevel: 5)
+        let old = Migraine(startDate: Date().addingTimeInterval(-3 * 86_400), endDate: Date().addingTimeInterval(-2 * 86_400), painLevel: 3, stressLevel: 3)
+        model.noteSummaryViewed(old)
+        #expect(requester.requestCount == 0, "an ongoing migraine blocks the prompt")
+
+        _ = model.endOngoing()
+        model.noteSummaryViewed(old)
+        #expect(requester.requestCount == 1)
     }
 
     @Test("change-stream events from elsewhere refresh the cache")
