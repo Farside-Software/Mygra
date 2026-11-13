@@ -115,14 +115,14 @@ struct ModifyMigraineSheetView: View {
             .navigationTitle("Modify Migraine")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) {
+                    Button("Cancel", systemImage: "xmark", role: .cancel) {
                         Haptics.lightImpact()
                         onCancel()
                     }
                     .foregroundStyle(.red)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("Save", systemImage: "checkmark") {
                         Haptics.lightImpact()
                         validateAndSave()
                     }

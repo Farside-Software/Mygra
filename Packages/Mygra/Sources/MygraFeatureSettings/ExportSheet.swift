@@ -98,7 +98,7 @@ struct ExportSheet: View {
             .background(LinearGradient.mygraWash.ignoresSafeArea())
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button("Done", systemImage: "checkmark") {
                         Haptics.lightImpact()
                         dismiss()
                     }

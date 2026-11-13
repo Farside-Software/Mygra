@@ -131,14 +131,14 @@ public struct MigraineEntryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) {
+                    Button("Cancel", systemImage: "xmark", role: .cancel) {
                         Haptics.lightImpact()
                         viewModel.clearStagedIntake()
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(viewModel.isOngoing ? "Start" : "Save") {
+                    Button(viewModel.isOngoing ? "Start" : "Save", systemImage: "checkmark") {
                         Haptics.lightImpact()
                         Task {
                             guard viewModel.validateBeforeSave() else {

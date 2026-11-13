@@ -42,6 +42,7 @@ public struct SettingsView: View {
                 #if DEBUG
                 .task {
                     // Screenshots: `-MygraDebugSettingsScroll cycle` scrolls to that section.
+                    if UserDefaults.standard.string(forKey: "MygraDebugPresent") == "report" { viewModel.showReportSetup = true }
                     guard let anchor = UserDefaults.standard.string(forKey: "MygraDebugSettingsScroll") else { return }
                     try? await Task.sleep(for: .milliseconds(800))
                     proxy.scrollTo(anchor, anchor: .center)
@@ -446,7 +447,7 @@ public struct SettingsView: View {
                     .labelStyle(.settingsIcon(.mygraBlue))
             }
         } header: {
-            Text("About Mygra")
+            Text("About Mygra").id("about")
         }
     }
 
@@ -769,13 +770,13 @@ private struct UserEditSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) {
+                    Button("Cancel", systemImage: "xmark", role: .cancel) {
                         Haptics.lightImpact()
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("Save", systemImage: "checkmark") {
                         onSave(draft)
                         Haptics.success()
                         dismiss()

@@ -132,6 +132,13 @@ struct MainView: View {
             if let name = UserDefaults.standard.string(forKey: "MygraDebugTab"), let tab = AppTab(rawValue: name) {
                 router.selectedTab = tab
             }
+            // Duo screenshots: `-MygraDebugPresent entry|paywall|attack|assistant`.
+            switch UserDefaults.standard.string(forKey: "MygraDebugPresent") {
+            case "entry": navigation.showingEntrySheet = true
+            case "paywall": session.paywall.present(nil)
+            case "attack": attackMode.enter()
+            default: break
+            }
             #endif
             handleDeepLink(router.pendingDeepLink)
             session.showEarlySupporterThanksIfNeeded()

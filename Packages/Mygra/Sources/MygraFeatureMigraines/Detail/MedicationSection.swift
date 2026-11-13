@@ -109,9 +109,9 @@ struct MedicationQuickAddSheet: View {
             .navigationTitle("Add Medication")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", systemImage: "xmark") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("Save", systemImage: "checkmark") {
                         onSave(name, medicationClass, dose, takenAt)
                         dismiss()
                     }

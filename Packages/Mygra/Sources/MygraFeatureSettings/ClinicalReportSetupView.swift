@@ -79,9 +79,9 @@ struct ClinicalReportSetupView: View {
             .navigationTitle("Clinical Report")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", systemImage: "xmark") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create PDF") {
+                    Button("Create PDF", systemImage: "checkmark") {
                         onCreate(
                             ClinicalReportOptions(months: months, includeName: includeName, includeBirthday: includeBirthday, includeHealthProfile: includeHealthProfile),
                             assessment
