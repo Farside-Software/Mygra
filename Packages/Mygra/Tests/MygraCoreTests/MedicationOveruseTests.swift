@@ -113,4 +113,45 @@ struct MedicationOveruseTests {
             #expect(!MedicationPreset.presets(for: cls).isEmpty)
         }
     }
+
+    // MARK: - OveruseSummary
+
+    @Test func summaryIsNilWhenNothingNearALimit() {
+        let d = doses(.triptan, daysAgo: Array(0..<5))
+        #expect(OveruseSummary(doses: d, now: now, calendar: utc) == nil)
+    }
+
+    @Test func summaryHeadlineAndRowsWhenOverLimit() throws {
+        let d = doses(.triptan, daysAgo: Array(0..<11)) + doses(.simpleAnalgesic, daysAgo: Array(0..<9).map { $0 + 12 })
+        let summary = try #require(OveruseSummary(doses: d, now: now, calendar: utc))
+        #expect(summary.status == .threshold)
+        #expect(summary.headline == "Over the medication-overuse limit")
+        #expect(summary.rows.first?.usage.medicationClass == .triptan)
+        #expect(summary.rows.first?.countText == "11 / 10 days")
+        #expect(summary.subtitle == "Triptans on 11 of the last 30 days")
+        let analgesic = try #require(summary.rows.first { $0.usage.medicationClass == .simpleAnalgesic })
+        #expect(analgesic.status == .approaching)
+        #expect(analgesic.countText == "9 / 15 days")
+        #expect(analgesic.accessibilityLabel == "Simple analgesics, 9 of the last 30 days, limit 15, approaching the limit")
+    }
+
+    @Test func summaryApproachingHeadlineAndCombinedRowLabel() throws {
+        let d = doses(.triptan, daysAgo: Array(0..<5)) + doses(.opioid, daysAgo: Array(0..<5).map { $0 + 6 })
+        // 10 combined days, each class only 5: only the combined total is at its limit.
+        let summary = try #require(OveruseSummary(doses: d, now: now, calendar: utc))
+        #expect(summary.rows.count == 1)
+        let row = try #require(summary.rows.first)
+        #expect(row.usage.isOverall)
+        #expect(row.name == "All acute medication, combined")
+        #expect(summary.headline == "Over the medication-overuse limit")
+        #expect(summary.subtitle == "Acute medication on 10 of the last 30 days")
+        #expect(row.accessibilityLabel == "All acute medication, combined, 10 of the last 30 days, limit 10, over the limit")
+    }
+
+    @Test func summaryApproachingOnly() throws {
+        let d = doses(.triptan, daysAgo: Array(0..<8))
+        let summary = try #require(OveruseSummary(doses: d, now: now, calendar: utc))
+        #expect(summary.status == .approaching)
+        #expect(summary.headline == "Approaching the medication-overuse limit")
+    }
 }

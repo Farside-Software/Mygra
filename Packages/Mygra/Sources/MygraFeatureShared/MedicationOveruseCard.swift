@@ -18,22 +18,47 @@ public struct MedicationOveruseCard: View {
     public init() {}
 
     public var body: some View {
-        let alerts = migraineData.overuseAlerts()
-        if !alerts.isEmpty {
-            InsightCard(title: String(localized: "Medication Use"), systemImage: "pills.fill", accent: alerts.contains { $0.status == .threshold } ? .red : .orange) {
+        if let summary = migraineData.overuseSummary() {
+            let tint: Color = summary.status == .threshold ? .red : .orange
+            InsightCard(title: String(localized: "Medication Use"), systemImage: "pills.fill", accent: tint) {
                 VStack(alignment: .leading, spacing: Brand.Space.md) {
-                    ForEach(alerts) { alert in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Label(alert.title, systemImage: alert.status == .threshold ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(alert.status == .threshold ? Color.red : Color.orange)
-                            Text(alert.message)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .accessibilityElement(children: .combine)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(summary.headline)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(tint)
+                        Text(summary.subtitle)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
+
+                    VStack(spacing: Brand.Space.sm) {
+                        ForEach(summary.rows) { row in
+                            let rowTint: Color = row.status == .threshold ? .red : .orange
+                            HStack(spacing: Brand.Space.sm) {
+                                Image(systemName: row.status == .threshold ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
+                                    .foregroundStyle(rowTint)
+                                    .font(.footnote)
+                                    .frame(width: 20)
+                                    .accessibilityHidden(true)
+                                Text(row.name)
+                                    .font(.subheadline)
+                                Spacer(minLength: Brand.Space.sm)
+                                Text(row.countText)
+                                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                                    .foregroundStyle(rowTint)
+                            }
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(row.accessibilityLabel)
+                        }
+                    }
+
+                    Text("Taking these on this many days a month is linked to medication-overuse headache. This is general information, not medical advice. Please talk with your clinician.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
                     Link(destination: MedicationOveruse.guidanceURL) {
                         Label("American Migraine Foundation: medication-overuse headache", systemImage: "arrow.up.right.square")
                             .font(.footnote.weight(.semibold))

@@ -219,6 +219,11 @@ public final class MigraineDataModel {
         MedicationOveruse.alerts(for: allMedicationDoses, now: now)
     }
 
+    /// Dashboard summary (headline + compact rows), nil when no class is near a limit.
+    public func overuseSummary(now: Date = Date()) -> OveruseSummary? {
+        OveruseSummary(doses: allMedicationDoses, now: now)
+    }
+
     #if DEBUG
     /// Seeds the demo data set (Settings developer menu).
     public func generateSampleData() {

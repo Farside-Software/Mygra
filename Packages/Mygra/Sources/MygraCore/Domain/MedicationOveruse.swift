@@ -55,6 +55,75 @@ public struct OveruseAlert: Equatable, Sendable, Identifiable {
     }
 }
 
+/// Presentation model for the dashboard card: one headline for the worst status and one
+/// compact row per class (or the combined total) at or approaching its limit.
+public struct OveruseSummary: Equatable, Sendable {
+    public struct Row: Equatable, Sendable, Identifiable {
+        public let usage: ClassUsage
+        public var id: String { MedicationOveruse.alertKey(for: usage.medicationClass) }
+        public var status: OveruseStatus { usage.status }
+        public var limit: Int { usage.threshold ?? MedicationOveruse.overallThresholdDays }
+
+        public var name: String {
+            usage.medicationClass.map { $0.pluralName.sentenceCapitalized }
+                ?? String(localized: "All acute medication, combined")
+        }
+
+        /// "11 / 10 days"
+        public var countText: String {
+            String(localized: "\(usage.days) / \(limit) days")
+        }
+
+        public var accessibilityLabel: String {
+            let state = status == .threshold
+                ? String(localized: "over the limit")
+                : String(localized: "approaching the limit")
+            return String(localized: "\(name), \(usage.days) of the last 30 days, limit \(limit), \(state)")
+        }
+    }
+
+    public let rows: [Row]
+
+    /// nil when nothing is at or approaching a limit.
+    public init?(usage: [ClassUsage]) {
+        let rows = usage
+            .filter { $0.status > .ok }
+            .sorted { lhs, rhs in
+                // Classes worst-first; the combined total is a supplementary row, listed last.
+                if lhs.isOverall != rhs.isOverall { return rhs.isOverall }
+                return (lhs.status, lhs.days) > (rhs.status, rhs.days)
+            }
+            .map(Row.init(usage:))
+        guard !rows.isEmpty else { return nil }
+        self.rows = rows
+    }
+
+    public init?(doses: [MedicationDose], now: Date = Date(), calendar: Calendar = .current) {
+        self.init(usage: MedicationOveruse.usage(of: doses, now: now, calendar: calendar))
+    }
+
+    /// The most severe status across rows (never `.ok`).
+    public var status: OveruseStatus { rows.map(\.status).max() ?? .ok }
+
+    public var headline: String {
+        status == .threshold
+            ? String(localized: "Over the medication-overuse limit")
+            : String(localized: "Approaching the medication-overuse limit")
+    }
+
+    /// Worst single class at the headline status ("Triptans on 11 of the last 30 days"),
+    /// falling back to the combined total when only it qualifies.
+    public var subtitle: String {
+        let worst = rows.first { !$0.usage.isOverall } ?? rows[0]
+        let name = worst.usage.isOverall ? String(localized: "Acute medication") : worst.name
+        return String(localized: "\(name) on \(worst.usage.days) of the last 30 days")
+    }
+}
+
+private extension String {
+    var sentenceCapitalized: String { prefix(1).uppercased() + dropFirst() }
+}
+
 public enum MedicationOveruse {
     public static let windowDays = 30
     public static let approachingDays = 8

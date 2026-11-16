@@ -433,6 +433,30 @@
       },
       "shouldGenerateSymbol" : false
     },
+    "%@ on %lld of the last 30 days" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ en %2$lld de los últimos 30 días"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pendant %2$lld des 30 derniers jours"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: 直近30日のうち%2$lld日"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
     "%@ · %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -482,6 +506,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@、片頭痛 %lld 件"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "%@, %lld of the last 30 days, limit %lld, %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$lld de los últimos 30 días, límite %3$lld, %4$@"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$lld des 30 derniers jours, limite %3$lld, %4$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、直近30日のうち%2$lld日、上限%3$lld日、%4$@"
           }
         }
       },
@@ -608,6 +656,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@：%@"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "%lld / %lld days" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld días"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld jours"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld日"
           }
         }
       },
@@ -2191,6 +2263,30 @@
       },
       "shouldGenerateSymbol" : false
     },
+    "Acute medication" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medicación aguda"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Médicaments de crise"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "急性期治療薬"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
     "Acute Medication Days" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2815,6 +2911,30 @@
       },
       "shouldGenerateSymbol" : false
     },
+    "All acute medication, combined" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toda la medicación aguda, en conjunto"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les médicaments de crise, combinés"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "急性期治療薬の合計"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
     "All migraines deleted" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3314,6 +3434,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "適用"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "approaching the limit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cerca del límite"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "près de la limite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上限に近づいています"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "Approaching the medication-overuse limit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca del límite de abuso de medicación"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Près de la limite d’abus de médicaments"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "薬剤の使いすぎの上限に近づいています"
           }
         }
       },
@@ -15909,6 +16077,54 @@
       },
       "shouldGenerateSymbol" : false
     },
+    "over the limit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "por encima del límite"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "au-dessus de la limite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上限を超えています"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "Over the medication-overuse limit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por encima del límite de abuso de medicación"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Au-dessus de la limite d’abus de médicaments"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "薬剤の使いすぎの上限を超えています"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
     "Oversleeping" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20752,6 +20968,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "服用時刻"
+          }
+        }
+      },
+      "shouldGenerateSymbol" : false
+    },
+    "Taking these on this many days a month is linked to medication-overuse headache. This is general information, not medical advice. Please talk with your clinician." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomarlos tantos días al mes se asocia con la cefalea por abuso de medicación. Esta es información general, no un consejo médico. Consulta con tu profesional de la salud."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les prendre autant de jours par mois est associé aux céphalées par abus de médicaments. Ces renseignements sont généraux et ne constituent pas un avis médical. Parlez-en à votre clinicien."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この日数だけ毎月服用すると、薬剤の使用過多による頭痛との関連が指摘されています。これは一般的な情報であり、医学的なアドバイスではありません。医師にご相談ください。"
           }
         }
       },
