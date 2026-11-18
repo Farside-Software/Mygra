@@ -88,6 +88,16 @@ public struct OnboardingView: View {
                 .accessibilityHint("Returns to the previous page")
                 .accessibilityIdentifier("backButton")
             }
+        } else if #available(iOS 26.0, *) {
+            // The first page keeps an invisible Back so the bar, and with it the progress
+            // dots, sit exactly where they do on every other page.
+            ToolbarItem(placement: .topBarLeading) {
+                Button {} label: { Label("Back", systemImage: "chevron.backward") }
+                    .hidden()
+                    .accessibilityHidden(true)
+                    .disabled(true)
+            }
+            .sharedBackgroundVisibility(.hidden)
         }
     }
 
