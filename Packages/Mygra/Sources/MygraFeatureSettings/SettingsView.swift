@@ -33,6 +33,8 @@ public struct SettingsView: View {
 
     @State private var viewModel = ViewModel()
     @State private var showCycleExplanation = false
+    /// Set by the Duo's split view: rows select a page there instead of pushing it.
+    @Environment(\.settingsSelection) private var splitSelection
 
     public init() {}
 
@@ -55,12 +57,11 @@ public struct SettingsView: View {
         Form {
             profileSection
             plusSection
-            CloudSyncSection()
-            attackModeSection
             preferencesSection
-            dashboardSection
+            personalizeSection
+            attackModeSection
             cycleSection
-            tagsSection
+            CloudSyncSection()
             dataSection
             aboutSection
             disclaimerSection
@@ -115,7 +116,11 @@ public struct SettingsView: View {
         Section {
             Button {
                 Haptics.lightImpact()
-                viewModel.isEditingUser = true
+                if let splitSelection {
+                    splitSelection.wrappedValue = .profile
+                } else {
+                    viewModel.isEditingUser = true
+                }
             } label: {
                 HStack(spacing: Brand.Space.md) {
                     Image(systemName: "person.crop.circle.fill")
@@ -141,6 +146,7 @@ public struct SettingsView: View {
             }
             .buttonStyle(.plain)
             .hoverHighlight()
+            .listRowBackground(splitSelection?.wrappedValue == .profile ? Color.accentColor.opacity(0.18) : nil)
             .accessibilityLabel(Text("Profile: \(profileName)"))
             .accessibilityHint("Edits your profile used for personalized insights")
         }
@@ -214,8 +220,6 @@ public struct SettingsView: View {
                 .disabled(viewModel.isRestoring)
                 .hoverHighlight()
             }
-        } header: {
-            Text("Mygra Plus")
         } footer: {
             if subscription.hasPlus {
                 Text("Migraine Assistant, Quick Bits, weather-risk alerts, PDF reports, and CSV export are unlocked.")
@@ -299,17 +303,21 @@ public struct SettingsView: View {
         return formatter.string(from: interval) ?? "\(minutes)"
     }
 
-    private var dashboardSection: some View {
+    /// Dashboard stats and tags: the two things you arrange, in one group.
+    private var personalizeSection: some View {
         Section {
-            NavigationLink(value: SettingsDestination.dashboardStats) {
+            SettingsRowLink(.dashboardStats) {
                 Label("Dashboard Stats", systemImage: "square.grid.2x2.fill")
                     .labelStyle(.settingsIcon(.pink))
             }
             .hoverHighlight()
+            SettingsRowLink(.tags) {
+                Label("Manage Tags", systemImage: "tag.fill")
+                    .labelStyle(.settingsIcon(.mygraPurple))
+            }
+            .hoverHighlight()
         } header: {
-            Text("Dashboard")
-        } footer: {
-            Text("Choose and arrange the Health stats shown on the Today card.")
+            Text("Personalize")
         }
     }
 
@@ -350,18 +358,6 @@ public struct SettingsView: View {
             } else {
                 Text("Mark period days on the calendar and see whether your attacks cluster around your period. Mygra only reads menstrual flow dates from Apple Health and never writes cycle data.")
             }
-        }
-    }
-
-    private var tagsSection: some View {
-        Section {
-            NavigationLink(value: SettingsDestination.tags) {
-                Label("Manage Tags", systemImage: "tag.fill")
-                    .labelStyle(.settingsIcon(.mygraPurple))
-            }
-            .hoverHighlight()
-        } header: {
-            Text("Tags")
         }
     }
 
@@ -436,7 +432,7 @@ public struct SettingsView: View {
             }
             creditRow(title: "Developer", name: "Nick Molargik", url: "https://www.linkedin.com/in/nicholas-molargik/", systemImage: "hammer.fill", tint: .mygraBlue)
             creditRow(title: "Graphics", name: "Rahul Parmar", url: "https://www.linkedin.com/in/rpn4499/", systemImage: "paintpalette.fill", tint: .mygraPurple)
-            creditRow(title: "Publisher", name: "Molargik Software LLC", url: "https://www.molargiksoftware.com", systemImage: "building.2.fill", tint: .indigo)
+            creditRow(title: "Publisher", name: Company.legalName, url: Company.website.absoluteString, systemImage: "building.2.fill", tint: .indigo)
             Link(destination: Self.writeReviewURL) {
                 Label("Rate Mygra", systemImage: "star.fill")
                     .labelStyle(.settingsIcon(.orange))
@@ -452,7 +448,7 @@ public struct SettingsView: View {
     }
 
     private static let writeReviewURL = URL(string: "https://apps.apple.com/app/id6747298583?action=write-review")!
-    private static let shareURL = URL(string: "https://molargiksoftware.com/go/mygra?ct=share_app")!
+    private static let shareURL = Company.page("/go/mygra?ct=share_app")
 
     private func creditRow(title: LocalizedStringKey, name: String, url: String, systemImage: String, tint: Color) -> some View {
         LabeledContent {
@@ -794,12 +790,7 @@ private struct UserEditSheet: View {
     NavigationStack {
         SettingsView()
             .navigationTitle("Settings")
-            .navigationDestination(for: SettingsDestination.self) { destination in
-                switch destination {
-                case .tags: TagManagementView()
-                case .dashboardStats: DashboardStatsSettingsView()
-                }
-            }
+            .navigationDestination(for: SettingsDestination.self) { SettingsDestinationView(destination: $0) }
     }
     .previewEnvironment()
 }

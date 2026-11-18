@@ -27,7 +27,7 @@ public struct PaywallView: View {
     @State private var isPurchasingLifetime = false
     @State private var isRestoring = false
 
-    public static let privacyURL = URL(string: "https://molargiksoftware.com/privacy")!
+    public static let privacyURL = Company.privacy
     public static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
 
     public init(feature: PlusFeature? = nil) {

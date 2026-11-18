@@ -40,7 +40,7 @@ struct MygraCommands: Commands {
         }
 
         CommandGroup(replacing: .help) {
-            Link("Mygra Website", destination: URL(string: "https://www.molargiksoftware.com")!)
+            Link("Mygra Website", destination: Company.appPage)
         }
     }
 }
