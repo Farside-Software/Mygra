@@ -54,16 +54,17 @@ public struct MigraineCalendarView: View {
                 // With a fold, the month takes the whole left screen and the day list the whole
                 // right one; the gap between them is the hinge. Without one, a fixed month width.
                 let monthWidth: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? min(520, layout.width * 0.55)
-                HStack(alignment: .top, spacing: 0) {
+                FoldSplitLayout(leadingWidth: monthWidth, separatorWidth: layout.hasFold ? gap : 1) {
                     calendarPane
-                        .frame(width: monthWidth)
                     if layout.hasFold {
-                        Color.clear.frame(width: gap)
+                        Color.clear
                     } else {
                         Divider()
                     }
                     dayList
                 }
+                // One page background across both halves (the day list is a grouped list).
+                .background(Color(.systemGroupedBackground).ignoresSafeArea())
             } else {
                 VStack(spacing: 0) {
                     calendarPane

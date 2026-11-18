@@ -213,7 +213,7 @@ public struct MigraineListView: View {
         let gap = MigraineLayout.columnGap(layout)
         let listWidth: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? min(max(layout.width * 0.42, 340), 440)
         let separator: CGFloat = layout.hasFold ? gap : 1
-        return MigraineSplitLayout(leadingWidth: listWidth, separatorWidth: separator) {
+        return FoldSplitLayout(leadingWidth: listWidth, separatorWidth: separator) {
             listColumn
             if layout.hasFold {
                 Color.clear
