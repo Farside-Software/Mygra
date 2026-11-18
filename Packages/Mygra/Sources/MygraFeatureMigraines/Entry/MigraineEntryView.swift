@@ -99,17 +99,23 @@ public struct MigraineEntryView: View {
     @ViewBuilder
     private var formPanes: some View {
         if isWide {
-            HStack(alignment: .top, spacing: MigraineLayout.columnGap(layout) - Brand.Space.xxl) {
+            // The two forms are split at the fold (centre of the window when there is none) with
+            // a clear gap there, so no card crosses the hinge.
+            let gap = layout.hasFold ? Brand.Space.xxl * 2 : MigraineLayout.columnGap(layout)
+            let leading = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? max(layout.width / 2 - gap / 2, 0)
+            FoldSplitLayout(leadingWidth: leading, separatorWidth: gap) {
                 Form {
                     greetingRow
                     whenSections
                 }
                 .formStyle(.grouped)
+                Color.clear
                 Form {
                     surroundingsSections
                 }
                 .formStyle(.grouped)
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
         } else {
             Form {
                 greetingRow

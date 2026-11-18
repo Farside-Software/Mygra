@@ -173,6 +173,36 @@ public struct MigraineDetailView: View {
         }
     }
 
+    private var hasContext: Bool {
+        !(migraine.note ?? "").isEmpty || !migraine.triggers.isEmpty || !migraine.customTriggers.isEmpty
+            || migraine.health != nil || migraine.weather != nil
+    }
+
+    /// With nothing captured around the record, the second column still says so, so both
+    /// halves read as one page instead of leaving the right half blank.
+    @ViewBuilder
+    private var emptyContextCards: some View {
+        MigraineCard("Triggers", systemImage: "exclamationmark.triangle", trailing: {
+            if !migraine.isOngoing {
+                MigraineQuietAction(title: "Add", systemImage: "plus") { showingModifySheet = true }
+            }
+        }) {
+            Text("None recorded")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        MigraineCard("Note", systemImage: "note.text") {
+            Text("No note was written.")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        MigraineCard("Health and weather", systemImage: "heart.text.square") {
+            Text("Health and weather were not recorded.")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     /// Phone, folded Duo, narrow windows: one calm column. On the Duo the nav bar is the
     /// trailing strip and the title already sits above, so no extra gap at the top.
     private var stackedContent: some View {
@@ -201,7 +231,11 @@ public struct MigraineDetailView: View {
                 InsightSectionView(migraine: migraine)
             }
             VStack(spacing: Brand.Space.lg) {
-                contextCards
+                if hasContext {
+                    contextCards
+                } else {
+                    emptyContextCards
+                }
             }
         }
         .padding(.horizontal, Brand.Space.lg)

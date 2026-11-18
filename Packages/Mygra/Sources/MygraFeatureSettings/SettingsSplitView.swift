@@ -88,9 +88,11 @@ public struct SettingsDestinationView: View {
 }
 
 /// The profile editor as a page (the pushed layouts open it as a sheet). Edits a scratch
-/// copy and saves on request, like the sheet.
+/// copy and saves it when the page goes away or the app leaves the foreground, so the page
+/// has no confirm button of its own.
 struct ProfileSettingsPage: View {
     @Environment(UserDataModel.self) private var userData
+    @Environment(\.scenePhase) private var scenePhase
     @State private var draft: User?
 
     var body: some View {
@@ -100,14 +102,9 @@ struct ProfileSettingsPage: View {
                     UserEditView(user: draft)
                 }
                 .formStyle(.grouped)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Save", systemImage: "checkmark") {
-                            userData.apply(draft)
-                            Haptics.success()
-                        }
-                        .tint(.mygraBlue)
-                    }
+                .onDisappear { userData.apply(draft) }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase != .active { userData.apply(draft) }
                 }
             } else {
                 Color.clear
@@ -126,19 +123,25 @@ struct ProfileSettingsPage: View {
 
 public struct SettingsSplitView: View {
     @Binding private var selection: SettingsDestination?
+    @State private var layout = LayoutProbe()
 
     public init(selection: Binding<SettingsDestination?>) {
         _selection = selection
     }
 
+    /// Two equal columns around the hinge: the list on the left half, the selected page on the
+    /// right half. Without a fold (iPad, debug) the window is simply halved.
     public var body: some View {
-        NavigationSplitView {
-            SettingsView()
-                .navigationTitle("Settings")
-                .statusSubtitle()
-                .environment(\.settingsSelection, $selection)
-                .navigationSplitViewColumnWidth(min: 320, ideal: 350, max: 400)
-        } detail: {
+        let gap = layout.isFoldActive ? Brand.Space.xxl * 2 : Brand.Space.xl
+        let leading: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? (layout.width / 2 - gap / 2)
+        FoldSplitLayout(leadingWidth: leading, separatorWidth: gap) {
+            NavigationStack {
+                SettingsView()
+                    .navigationTitle("Settings")
+                    .statusSubtitle()
+                    .environment(\.settingsSelection, $selection)
+            }
+            Color.clear
             NavigationStack {
                 if let selection {
                     SettingsDestinationView(destination: selection)
@@ -148,7 +151,8 @@ public struct SettingsSplitView: View {
                 }
             }
         }
-        .navigationSplitViewStyle(.balanced)
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .containerLayoutProbe { layout = $0 }
     }
 }
 #endif
