@@ -242,7 +242,7 @@ public struct MigraineEntryView: View {
             if viewModel.isPullingHealth {
                 ProgressView().controlSize(.small)
             } else if viewModel.healthError != nil {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+                Image(systemName: "heart.slash").foregroundStyle(.secondary)
             } else if viewModel.healthNotice != nil {
                 Image(systemName: "heart.slash").foregroundStyle(.secondary)
             } else if viewModel.didPullHealth {
@@ -296,7 +296,7 @@ public struct MigraineEntryView: View {
                 } else if viewModel.weatherNeedsLocation {
                     Image(systemName: "location.slash").foregroundStyle(.secondary)
                 } else if viewModel.weatherError != nil {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+                    Image(systemName: "cloud.slash").foregroundStyle(.secondary)
                 }
 
                 Text(viewModel.weatherStatusText())

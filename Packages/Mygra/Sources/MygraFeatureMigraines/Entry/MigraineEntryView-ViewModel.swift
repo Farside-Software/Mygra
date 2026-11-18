@@ -189,6 +189,10 @@ extension MigraineEntryView {
             } else if !healthManager.isAuthorized {
                 healthNotice = .notConnected
                 didPullHealth = false
+            } else if healthManager.lastErrorIsAccessProblem {
+                // Access was never granted or was withdrawn: the calm "not connected" line with Connect.
+                healthNotice = .notConnected
+                didPullHealth = false
             } else if let error = healthManager.lastError {
                 healthError = error
                 didPullHealth = false

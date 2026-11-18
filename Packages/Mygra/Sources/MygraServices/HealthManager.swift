@@ -201,6 +201,14 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
 
     public private(set) var isAuthorized = false
     public private(set) var lastError: (any Error)?
+    /// True when the last failure was HealthKit saying access is missing (denied or never
+    /// granted), as opposed to a read that broke. Callers treat it as "not connected".
+    public var lastErrorIsAccessProblem: Bool {
+        guard case .snapshotFailed(let underlying)? = lastError as? HealthError,
+              let hkError = underlying as? HKError else { return false }
+        return hkError.code == .errorAuthorizationDenied || hkError.code == .errorAuthorizationNotDetermined
+    }
+
     /// The most recently fetched snapshot (cached for UI).
     public private(set) var latestData: HealthData?
 
