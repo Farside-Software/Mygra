@@ -124,10 +124,7 @@ struct SplashView: View {
     // MARK: Pieces
 
     private var mark: some View {
-        Image("mygra_head")
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .scaleEffect(showsMark ? 1 : 1.06)
+        MygraMark(isRevealed: showsMark)
             .accessibilityLabel("Mygra")
             .accessibilityHidden(true)
     }
@@ -195,9 +192,10 @@ struct SplashView: View {
             showsButton = true
             return
         }
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { showsMark = true }
-        withAnimation(.easeOut(duration: 0.4).delay(0.35)) { showsText = true }
-        withAnimation(.easeOut(duration: 0.35).delay(0.55)) { showsButton = true }
+        // The mark animates itself (halo segments, then head, then shoulders, about a second).
+        showsMark = true
+        withAnimation(.easeOut(duration: 0.4).delay(0.9)) { showsText = true }
+        withAnimation(.easeOut(duration: 0.35).delay(1.1)) { showsButton = true }
     }
 }
 
