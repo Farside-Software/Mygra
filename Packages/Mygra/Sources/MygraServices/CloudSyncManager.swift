@@ -114,14 +114,7 @@ public final class CloudSyncManager {
     // MARK: - Monitoring
 
     private func startMonitoring() {
-        let monitor = NWPathMonitor()
-        monitor.pathUpdateHandler = { [weak self] path in
-            let isAvailable = path.status == .satisfied
-            Task { @MainActor in
-                self?.handleNetworkChange(isAvailable: isAvailable)
-            }
-        }
-        monitor.start(queue: DispatchQueue(label: "CloudSyncNetworkMonitor"))
+        let monitor = Self.makePathMonitor(owner: self)
         networkMonitor = monitor
 
         let remoteChangeObserver = NotificationCenter.default.addObserver(
@@ -150,6 +143,21 @@ public final class CloudSyncManager {
         notificationObservers.append(eventObserver)
 
         updateSyncStatus()
+    }
+
+    /// NWPathMonitor calls its handler on the monitor's own dispatch queue. A closure written
+    /// inside this main-actor class would be main-actor isolated and trap there, so it is built
+    /// in a nonisolated helper and hops to the main actor itself.
+    nonisolated private static func makePathMonitor(owner: CloudSyncManager) -> NWPathMonitor {
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak owner] path in
+            let isAvailable = path.status == .satisfied
+            Task { @MainActor in
+                owner?.handleNetworkChange(isAvailable: isAvailable)
+            }
+        }
+        monitor.start(queue: DispatchQueue(label: "CloudSyncNetworkMonitor"))
+        return monitor
     }
 
     private func stopMonitoring() {

@@ -161,12 +161,20 @@ struct MygraApp: App {
 
 /// The BGAppRefresh task that re-checks weather risk roughly every 90 minutes.
 enum BackgroundWeatherRefresh {
-    static let identifier = "com.molargiksoftware.Mygra.weatherRefresh"
+    nonisolated static let identifier = "com.molargiksoftware.Mygra.weatherRefresh"
     /// Seconds between checks.
     static let interval: TimeInterval = 90 * 60
 
     /// Registers the handler. Must run before any task is scheduled.
     static func register(session: SessionController) {
+        registerHandler(session: session)
+    }
+
+    /// BGTaskScheduler calls the launch handler on a background queue (`using: nil`). A closure
+    /// written inside this main-actor type would be main-actor isolated and trap there, so it is
+    /// built in a nonisolated helper and hops to the main actor itself.
+    nonisolated private static func registerHandler(session: SessionController) {
+        let session = UncheckedSendableBox(value: session)
         BGTaskScheduler.shared.register(forTaskWithIdentifier: identifier, using: nil) { task in
             guard let refreshTask = task as? BGAppRefreshTask else {
                 task.setTaskCompleted(success: false)
@@ -175,7 +183,7 @@ enum BackgroundWeatherRefresh {
             let box = UncheckedSendableBox(value: refreshTask)
             Task { @MainActor in
                 _ = schedule()
-                await session.checkWeatherRisk()
+                await session.value.checkWeatherRisk()
                 box.value.setTaskCompleted(success: true)
             }
         }

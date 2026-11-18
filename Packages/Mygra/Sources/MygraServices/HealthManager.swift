@@ -75,117 +75,136 @@ actor HealthQueryClient {
         self.store = store
     }
 
+    // HealthKit calls result handlers on a background queue. A closure written inside this
+    // actor would be actor isolated and trap there, so every handler is built in a
+    // nonisolated static helper (see `Self.make...Query`).
+
     func sumQuantity(_ type: HKQuantityType, unit: HKUnit, from start: Date, to end: Date) async throws -> Double {
         try await withCheckedThrowingContinuation { continuation in
-            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
-            let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, error in
-                if let hkError = error as? HKError, hkError.code == .errorNoData {
-                    continuation.resume(returning: 0)
-                } else if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: stats?.sumQuantity()?.doubleValue(for: unit) ?? 0)
-                }
+            store.execute(Self.makeSumQuery(type, unit: unit, from: start, to: end, continuation: continuation))
+        }
+    }
+
+    nonisolated private static func makeSumQuery(_ type: HKQuantityType, unit: HKUnit, from start: Date, to end: Date, continuation: CheckedContinuation<Double, any Error>) -> HKQuery {
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        return HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, error in
+            if let hkError = error as? HKError, hkError.code == .errorNoData {
+                continuation.resume(returning: 0)
+            } else if let error {
+                continuation.resume(throwing: error)
+            } else {
+                continuation.resume(returning: stats?.sumQuantity()?.doubleValue(for: unit) ?? 0)
             }
-            store.execute(query)
         }
     }
 
     func averageQuantity(_ type: HKQuantityType, unit: HKUnit, from start: Date, to end: Date) async throws -> Double {
         try await withCheckedThrowingContinuation { continuation in
-            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
-            let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .discreteAverage) { _, stats, error in
-                if let hkError = error as? HKError, hkError.code == .errorNoData {
-                    continuation.resume(returning: 0)
-                } else if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    continuation.resume(returning: stats?.averageQuantity()?.doubleValue(for: unit) ?? 0)
-                }
+            store.execute(Self.makeAverageQuery(type, unit: unit, from: start, to: end, continuation: continuation))
+        }
+    }
+
+    nonisolated private static func makeAverageQuery(_ type: HKQuantityType, unit: HKUnit, from start: Date, to end: Date, continuation: CheckedContinuation<Double, any Error>) -> HKQuery {
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        return HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .discreteAverage) { _, stats, error in
+            if let hkError = error as? HKError, hkError.code == .errorNoData {
+                continuation.resume(returning: 0)
+            } else if let error {
+                continuation.resume(throwing: error)
+            } else {
+                continuation.resume(returning: stats?.averageQuantity()?.doubleValue(for: unit) ?? 0)
             }
-            store.execute(query)
         }
     }
 
     func totalSleepHours(_ sleepType: HKCategoryType, from start: Date, to end: Date) async throws -> Double {
         try await withCheckedThrowingContinuation { continuation in
-            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
-            let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: true)
-            let query = HKSampleQuery(sampleType: sleepType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, error in
-                if let hkError = error as? HKError, hkError.code == .errorNoData {
-                    continuation.resume(returning: 0)
-                    return
-                } else if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                let asleep: Set<HKCategoryValueSleepAnalysis> = [.asleepUnspecified, .asleepCore, .asleepDeep, .asleepREM]
-                let totalSeconds = (samples as? [HKCategorySample])?
-                    .filter { sample in
-                        guard let value = HKCategoryValueSleepAnalysis(rawValue: sample.value) else { return false }
-                        return asleep.contains(value)
-                    }
-                    .reduce(0.0) { $0 + $1.endDate.timeIntervalSince($1.startDate) } ?? 0
-                continuation.resume(returning: totalSeconds / 3600.0)
+            store.execute(Self.makeSleepQuery(sleepType, from: start, to: end, continuation: continuation))
+        }
+    }
+
+    nonisolated private static func makeSleepQuery(_ sleepType: HKCategoryType, from start: Date, to end: Date, continuation: CheckedContinuation<Double, any Error>) -> HKQuery {
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: true)
+        return HKSampleQuery(sampleType: sleepType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, error in
+            if let hkError = error as? HKError, hkError.code == .errorNoData {
+                continuation.resume(returning: 0)
+                return
+            } else if let error {
+                continuation.resume(throwing: error)
+                return
             }
-            store.execute(query)
+            let asleep: Set<HKCategoryValueSleepAnalysis> = [.asleepUnspecified, .asleepCore, .asleepDeep, .asleepREM]
+            let totalSeconds = (samples as? [HKCategorySample])?
+                .filter { sample in
+                    guard let value = HKCategoryValueSleepAnalysis(rawValue: sample.value) else { return false }
+                    return asleep.contains(value)
+                }
+                .reduce(0.0) { $0 + $1.endDate.timeIntervalSince($1.startDate) } ?? 0
+            continuation.resume(returning: totalSeconds / 3600.0)
         }
     }
 
     /// Start-of-day dates on which any menstrual flow was recorded (the "none" value excluded).
     func menstrualFlowDays(_ flowType: HKCategoryType, from start: Date, to end: Date, calendar: Calendar) async throws -> [Date] {
         try await withCheckedThrowingContinuation { continuation in
-            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
-            let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
-            let query = HKSampleQuery(sampleType: flowType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, error in
-                if let hkError = error as? HKError, hkError.code == .errorNoData {
-                    continuation.resume(returning: [])
-                } else if let error {
-                    continuation.resume(throwing: error)
-                } else {
-                    let flowing = ((samples as? [HKCategorySample]) ?? []).filter {
-                        HKCategoryValueVaginalBleeding(rawValue: $0.value) != HKCategoryValueVaginalBleeding.none
-                    }
-                    continuation.resume(returning: flowing.map { calendar.startOfDay(for: $0.startDate) })
+            store.execute(Self.makeFlowDaysQuery(flowType, from: start, to: end, calendar: calendar, continuation: continuation))
+        }
+    }
+
+    nonisolated private static func makeFlowDaysQuery(_ flowType: HKCategoryType, from start: Date, to end: Date, calendar: Calendar, continuation: CheckedContinuation<[Date], any Error>) -> HKQuery {
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+        return HKSampleQuery(sampleType: flowType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: [sort]) { _, samples, error in
+            if let hkError = error as? HKError, hkError.code == .errorNoData {
+                continuation.resume(returning: [])
+            } else if let error {
+                continuation.resume(throwing: error)
+            } else {
+                let flowing = ((samples as? [HKCategorySample]) ?? []).filter {
+                    HKCategoryValueVaginalBleeding(rawValue: $0.value) != HKCategoryValueVaginalBleeding.none
                 }
+                continuation.resume(returning: flowing.map { calendar.startOfDay(for: $0.startDate) })
             }
-            store.execute(query)
         }
     }
 
     func inferMenstrualPhase(_ flowType: HKCategoryType?, from start: Date, to end: Date) async throws -> MenstrualPhase? {
         guard let flowType else { return nil }
         return try await withCheckedThrowingContinuation { continuation in
-            let predicate = HKQuery.predicateForSamples(withStart: start.addingTimeInterval(-28 * 24 * 3600), end: end, options: [])
-            let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-            let query = HKSampleQuery(sampleType: flowType, predicate: predicate, limit: 50, sortDescriptors: [sort]) { _, samples, error in
-                if let hkError = error as? HKError, hkError.code == .errorNoData {
-                    continuation.resume(returning: nil)
-                    return
-                } else if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                let recent = (samples as? [HKCategorySample]) ?? []
-                let sevenDaysAgo = Date().addingTimeInterval(-7 * 24 * 3600)
-                let hasRecentHeavy = recent.contains {
-                    $0.endDate >= sevenDaysAgo && HKCategoryValueVaginalBleeding(rawValue: $0.value) == .heavy
-                }
-                if hasRecentHeavy {
-                    continuation.resume(returning: .menstrual)
-                } else if let lastFlow = recent.first {
-                    let days = Calendar.current.dateComponents([.day], from: lastFlow.endDate, to: Date()).day ?? 0
-                    switch days {
-                    case 0...7: continuation.resume(returning: .menstrual)
-                    case 8...14: continuation.resume(returning: .follicular)
-                    case 15...18: continuation.resume(returning: .ovulatory)
-                    default: continuation.resume(returning: .luteal)
-                    }
-                } else {
-                    continuation.resume(returning: nil)
-                }
+            store.execute(Self.makePhaseQuery(flowType, from: start, to: end, continuation: continuation))
+        }
+    }
+
+    nonisolated private static func makePhaseQuery(_ flowType: HKCategoryType, from start: Date, to end: Date, continuation: CheckedContinuation<MenstrualPhase?, any Error>) -> HKQuery {
+        let predicate = HKQuery.predicateForSamples(withStart: start.addingTimeInterval(-28 * 24 * 3600), end: end, options: [])
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        return HKSampleQuery(sampleType: flowType, predicate: predicate, limit: 50, sortDescriptors: [sort]) { _, samples, error in
+            if let hkError = error as? HKError, hkError.code == .errorNoData {
+                continuation.resume(returning: nil)
+                return
+            } else if let error {
+                continuation.resume(throwing: error)
+                return
             }
-            store.execute(query)
+            let recent = (samples as? [HKCategorySample]) ?? []
+            let sevenDaysAgo = Date().addingTimeInterval(-7 * 24 * 3600)
+            let hasRecentHeavy = recent.contains {
+                $0.endDate >= sevenDaysAgo && HKCategoryValueVaginalBleeding(rawValue: $0.value) == .heavy
+            }
+            if hasRecentHeavy {
+                continuation.resume(returning: .menstrual)
+            } else if let lastFlow = recent.first {
+                let days = Calendar.current.dateComponents([.day], from: lastFlow.endDate, to: Date()).day ?? 0
+                switch days {
+                case 0...7: continuation.resume(returning: .menstrual)
+                case 8...14: continuation.resume(returning: .follicular)
+                case 15...18: continuation.resume(returning: .ovulatory)
+                default: continuation.resume(returning: .luteal)
+                }
+            } else {
+                continuation.resume(returning: nil)
+            }
         }
     }
 }
