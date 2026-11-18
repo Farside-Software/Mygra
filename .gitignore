@@ -17,3 +17,7 @@ Packages/*/.swiftpm/
 
 # Scratch
 build/
+
+# Local build output
+.build-dd*/
+*.af~
