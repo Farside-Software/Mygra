@@ -47,6 +47,8 @@ struct ModifyMigraineSheetView: View {
     @State private var modifyError: String?
     @State private var additions = IntakeAdditions()
     @State private var isEditingIntake = false
+    @State private var layout = LayoutProbe()
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     init(migraine: Migraine, onCancel: @escaping () -> Void, onSave: @escaping (MigraineEdits) -> Void) {
         self.migraine = migraine
@@ -63,66 +65,19 @@ struct ModifyMigraineSheetView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Duration") {
-                    DurationSection(startTitle: "Start", startDate: $editStartDate, isOngoing: $editIsOngoing, endDate: $editEndDate)
-                    if let modifyError {
-                        Text(modifyError).font(.footnote).foregroundStyle(.red)
-                    }
-                }
-
-                Section("Intake") {
-                    if let health = migraine.health {
-                        IntakeSection(
-                            baseHealth: health,
-                            isEditing: $isEditingIntake,
-                            additions: $additions,
-                            onConfirmAdd: {
-                                Haptics.success()
-                                withAnimation { isEditingIntake = false }
-                            },
-                            onCancel: { additions = .none }
-                        )
-                    } else {
-                        Text("No health data was captured with this migraine.").foregroundStyle(.secondary)
-                    }
-                }
-
-                Section("Experience") {
-                    LevelSlider.pain(level: $editPainLevel)
-                    LevelSlider.stress(level: $editStressLevel)
-                }
-
-                Section("Triggers") {
-                    TriggerPickerSection(selection: $selectedTriggers, tint: .red)
-                    if selectedTriggers.isEmpty {
-                        Text("No triggers selected").foregroundStyle(.secondary)
-                    } else {
-                        Text("\(selectedTriggers.count) selected")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Section {
-                    TextEditor(text: $noteText)
-                        .frame(minHeight: 100)
-                        .accessibilityIdentifier("modifyNoteEditor")
-                } header: {
-                    Text("Notes")
-                }
-            }
+            formPanes
             .navigationTitle("Modify Migraine")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) {
+                    Button("Cancel", systemImage: "xmark", role: .cancel) {
                         Haptics.lightImpact()
                         onCancel()
                     }
                     .foregroundStyle(.red)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("Save", systemImage: "checkmark") {
                         Haptics.lightImpact()
                         validateAndSave()
                     }
@@ -132,6 +87,90 @@ struct ModifyMigraineSheetView: View {
         }
         .presentationDetents([.large])
         .interactiveDismissDisabled()
+        .containerLayoutProbe { layout = $0 }
+    }
+
+    private var isWide: Bool {
+        MigraineLayout.isWide(layout, isRegularWidth: horizontalSizeClass == .regular)
+    }
+
+    /// One form on the phone and the folded Duo; two independent forms around the hinge on the
+    /// unfolded Duo and iPad, so nothing sits under the fold.
+    @ViewBuilder
+    private var formPanes: some View {
+        if isWide {
+            HStack(alignment: .top, spacing: MigraineLayout.columnGap(layout) - Brand.Space.xxl) {
+                Form { whenSections }
+                Form { surroundingsSections }
+            }
+        } else {
+            Form {
+                whenSections
+                surroundingsSections
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var whenSections: some View {
+        Section {
+            DurationSection(startTitle: "Start", startDate: $editStartDate, isOngoing: $editIsOngoing, endDate: $editEndDate)
+            if let modifyError {
+                Text(modifyError).font(.footnote).foregroundStyle(.red)
+            }
+        } header: {
+            Label("Duration", systemImage: "clock")
+        }
+
+        Section {
+            if let health = migraine.health {
+                IntakeSection(
+                    baseHealth: health,
+                    isEditing: $isEditingIntake,
+                    additions: $additions,
+                    onConfirmAdd: {
+                        Haptics.success()
+                        withAnimation { isEditingIntake = false }
+                    },
+                    onCancel: { additions = .none }
+                )
+            } else {
+                Text("No health data was captured with this migraine.").foregroundStyle(.secondary)
+            }
+        } header: {
+            Label("Intake", systemImage: "heart.text.square")
+        }
+
+        Section {
+            LevelSlider.pain(level: $editPainLevel)
+            LevelSlider.stress(level: $editStressLevel)
+        } header: {
+            Label("Experience", systemImage: "bolt.heart")
+        }
+    }
+
+    @ViewBuilder
+    private var surroundingsSections: some View {
+        Section {
+            TriggerPickerSection(selection: $selectedTriggers, tint: .red)
+            if selectedTriggers.isEmpty {
+                Text("No triggers selected").foregroundStyle(.secondary)
+            } else {
+                Text("\(selectedTriggers.count) selected")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Label("Triggers", systemImage: "exclamationmark.triangle")
+        }
+
+        Section {
+            TextEditor(text: $noteText)
+                .frame(minHeight: 100)
+                .accessibilityIdentifier("modifyNoteEditor")
+        } header: {
+            Label("Notes", systemImage: "note.text")
+        }
     }
 
     private func validateAndSave() {

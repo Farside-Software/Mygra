@@ -22,12 +22,12 @@ public struct PaywallView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(SubscriptionManager.self) private var subscription
-    @Environment(ToastManager.self) private var toast
+    @Environment(StatusCenter.self) private var toast
 
     @State private var isPurchasingLifetime = false
     @State private var isRestoring = false
 
-    public static let privacyURL = URL(string: "https://molargiksoftware.com/privacy")!
+    public static let privacyURL = Company.privacy
     public static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
 
     public init(feature: PlusFeature? = nil) {

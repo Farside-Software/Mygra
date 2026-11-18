@@ -178,7 +178,7 @@ public struct PreviewEnvironment {
     public let migraineRepository: PreviewMigraineRepository
     public let tagRepository: PreviewTagRepository
     public let userRepository: PreviewUserRepository
-    public let toastManager = ToastManager()
+    public let statusCenter = StatusCenter()
     public let migraineData: MigraineDataModel
     public let tagData: TagDataModel
     public let userData: UserDataModel
@@ -221,7 +221,7 @@ public struct PreviewEnvironment {
             logMedication: LogMedicationUseCase(repository: migraineRepository),
             removeMedication: RemoveMedicationUseCase(repository: migraineRepository),
             observeChanges: observe,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
         tagData = TagDataModel(
             loadTags: LoadTagsUseCase(repository: tagRepository),
@@ -231,7 +231,7 @@ public struct PreviewEnvironment {
             reorderTags: ReorderTagsUseCase(repository: tagRepository),
             assignTags: AssignTagsUseCase(repository: tagRepository),
             observeChanges: observe,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
         userData = UserDataModel(
             loadUser: LoadUserUseCase(repository: userRepository),
@@ -239,7 +239,7 @@ public struct PreviewEnvironment {
             updateUser: UpdateUserUseCase(repository: userRepository),
             deleteUser: DeleteUserUseCase(repository: userRepository),
             observeChanges: observe,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
         insights = InsightModel(
             loadMigraines: LoadMigrainesUseCase(repository: migraineRepository),
@@ -260,7 +260,7 @@ public struct PreviewEnvironment {
             endAttack: EndAttackUseCase(repository: migraineRepository, end: endOngoing),
             coordinator: FinishLoggingCoordinator(defaults: UserDefaults.standard),
             observeChanges: observe,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
         weatherManager = WeatherManager(locationManager: LocationManager())
         #if canImport(HealthKit) && !os(macOS)
@@ -299,7 +299,7 @@ extension View {
             .environment(env.weatherManager)
             .environment(env.notificationManager)
             .environment(env.cloudSyncManager)
-            .environment(env.toastManager)
+            .environment(env.statusCenter)
             .environment(env.subscription)
             .environment(env.paywall)
             .environment(env.attackMode)

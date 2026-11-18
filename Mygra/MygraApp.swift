@@ -15,6 +15,7 @@ import SwiftUI
 import MygraComposition
 import MygraCore
 import MygraData
+import MygraFeatureShared
 import MygraServices
 import os
 
@@ -64,6 +65,22 @@ struct MygraApp: App {
         // Expose the session to App Intents (Siri, Shortcuts, Spotlight).
         AppDependencyManager.shared.add(dependency: session)
 
+        // The Live Activity's buttons (pain up/down, end migraine) run here, in the app
+        // process, even when the app is in the background.
+        AppDependencyManager.shared.add(dependency: MigraineLiveActivityActions(
+            changePain: { [session] delta in
+                Log.liveActivity.info("Live Activity pain button: \(delta)")
+                guard let ongoing = try? session.loadMigraines().first(where: \.isOngoing) else { return }
+                session.attackMode.setIntensity(ongoing.painLevel + delta)
+                session.statusSync.syncNow()
+            },
+            endMigraine: { [session] in
+                Log.liveActivity.info("Live Activity end button")
+                session.attackMode.endAttack()
+                session.statusSync.syncNow()
+            }
+        ))
+
         if !Self.isRunningTests {
             BackgroundWeatherRefresh.register(session: session)
             if !bgWeatherTaskScheduled {
@@ -98,12 +115,15 @@ struct MygraApp: App {
                         if scenario == "cyclePressure" {
                             session.runDebugCyclePressureScenario()
                             session.writeDebugClinicalReport()
+                        } else if scenario == "store" {
+                            session.runDebugStoreScenario()
                         } else if scenario.hasPrefix("dash") {
                             session.runDebugDashboardScenario(scenario)
                         } else {
                             session.runDebugAttackScenario(scenario)
                         }
                     }
+                    session.applyDebugFlags()
                     switch UserDefaults.standard.string(forKey: "MygraDebugTab") {
                     case "settings": session.router.select(.settings)
                     case "calendar": session.router.select(.calendar)

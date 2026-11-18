@@ -40,16 +40,24 @@ nonisolated public enum MigraineDates {
         }
     }
 
-    /// Duration string with unit suffixes, e.g. "2h 05m 09s" or "4m 09s".
-    public static func durationString(_ interval: TimeInterval) -> String {
+    /// Duration string with unit suffixes. Settled durations drop the seconds once they pass a
+    /// minute ("2h 05m", "4m", "45s"); a live timer passes `ticking: true` to keep them ("2h 05m 09s").
+    public static func durationString(_ interval: TimeInterval, ticking: Bool = false) -> String {
         let seconds = max(0, Int(interval))
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60
         let secs = seconds % 60
+        if ticking {
+            return hours > 0
+                ? String(format: "%dh %02dm %02ds", hours, minutes, secs)
+                : String(format: "%dm %02ds", minutes, secs)
+        }
         if hours > 0 {
-            return String(format: "%dh %02dm %02ds", hours, minutes, secs)
+            return String(format: "%dh %02dm", hours, minutes)
+        } else if minutes > 0 {
+            return "\(minutes)m"
         } else {
-            return String(format: "%dm %02ds", minutes, secs)
+            return "\(secs)s"
         }
     }
 
@@ -63,6 +71,16 @@ nonisolated public enum MigraineDates {
         } else {
             return "\(minutes)m"
         }
+    }
+
+    /// A length of time in the app's short wording, rounded to the minute: "45 min", "2 h", "1 h 20 min".
+    /// Used wherever a duration is written into a sentence, so under an hour never reads "0.0 hours".
+    public static func durationPhrase(hours value: Double) -> String {
+        let totalMinutes = max(0, Int((value * 60).rounded()))
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        if hours == 0 { return "\(minutes) min" }
+        return minutes == 0 ? "\(hours) h" : "\(hours) h \(minutes) min"
     }
 
     /// The Health sampling window for a migraine that started at `start`: that calendar

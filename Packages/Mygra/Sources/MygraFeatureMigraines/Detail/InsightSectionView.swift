@@ -24,7 +24,7 @@ struct InsightSectionView: View {
     var body: some View {
         if #available(iOS 26.0, *) {
             if isGenerating || hasInsight {
-                InfoDetailView(title: String(localized: "Insight"), trailing: {
+                MigraineCard("Insight", systemImage: "sparkles", trailing: {
                     AppleIntelligenceBadge(isGenerating: isGenerating)
                 }) {
                     if isGenerating && !hasInsight {
@@ -83,7 +83,7 @@ struct IntelligenceUpgradeNotice: View {
             .layoutPriority(1)
             Spacer()
         }
-        .padding(14)
+        .padding(Brand.Space.lg)
         .cardSurface()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Apple Intelligence. Update to \(platformName) to access these features.")

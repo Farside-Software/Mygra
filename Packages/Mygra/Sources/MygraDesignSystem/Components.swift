@@ -10,8 +10,9 @@ import SwiftUI
 
 // MARK: - InsightCard
 
-/// The standard titled content card: a material surface with a restrained single-accent
-/// gradient wash, a hairline border, and a soft shadow.
+/// The one titled card used across the app: a symbol-and-title header (symbol in the accent,
+/// title in the primary colour) over the content, on the shared `cardSurface` (material fill,
+/// hairline border, soft shadow). `MigraineCard` in the migraine screens draws the same header.
 public struct InsightCard<Content: View>: View {
     let title: String?
     let systemImage: String?
@@ -21,7 +22,7 @@ public struct InsightCard<Content: View>: View {
     public init(
         title: String? = nil,
         systemImage: String? = nil,
-        accent: Color = .mygraBlue,
+        accent: Color = .mygraPurple,
         @ContentBuilder content: () -> Content
     ) {
         self.title = title
@@ -33,33 +34,26 @@ public struct InsightCard<Content: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: Brand.Space.md) {
             if let title {
-                HStack {
+                HStack(alignment: .firstTextBaseline, spacing: Brand.Space.sm) {
                     if let systemImage {
-                        Label(title, systemImage: systemImage)
-                            .font(.headline.weight(.semibold))
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(accent, .primary)
+                        Label {
+                            Text(title)
+                        } icon: {
+                            Image(systemName: systemImage).foregroundStyle(accent)
+                        }
+                        .font(.headline)
                     } else {
-                        Text(title)
-                            .font(.headline.weight(.semibold))
+                        Text(title).font(.headline)
                     }
                     Spacer(minLength: 0)
                 }
+                .accessibilityAddTraits(.isHeader)
             }
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Brand.Space.lg)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: Brand.Radius.card, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                RoundedRectangle(cornerRadius: Brand.Radius.card, style: .continuous)
-                    .fill(LinearGradient(colors: [accent.opacity(0.12), .clear], startPoint: .topLeading, endPoint: .bottomTrailing))
-            }
-        )
-        .overlay(RoundedRectangle(cornerRadius: Brand.Radius.card, style: .continuous).strokeBorder(.quaternary))
-        .shadow(color: .black.opacity(0.06), radius: 10, x: 0, y: 4)
+        .cardSurface()
         .contentShape(RoundedRectangle(cornerRadius: Brand.Radius.card, style: .continuous))
         .accessibilityElement(children: .contain)
     }
@@ -518,7 +512,7 @@ public struct TypingIndicator: View {
 #Preview("Cards") {
     ScrollView {
         VStack(spacing: 16) {
-            InsightCard(title: "Today", systemImage: "sun.max", accent: .mygraBlue) {
+            InsightCard(title: "Today", systemImage: "sun.max") {
                 Text("No migraine today.").foregroundStyle(.secondary)
             }
             DetailRowView(style: .insight, systemImage: "drop.fill", title: "Low hydration on migraine days", subtitle: "Average water intake: 1.1 L on migraine days.", tint: .blue) {

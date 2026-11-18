@@ -22,6 +22,9 @@ extension MigraineEntryView {
         var isPullingHealth = true
         var didPullHealth = false
         var healthError: (any Error)?
+        /// Neutral (not an error): Health is unavailable here or not connected yet.
+        var healthNotice: HealthNotice?
+        enum HealthNotice { case unavailable, notConnected }
 
         var isPullingWeather = true
         var didPullWeather = false
@@ -56,8 +59,8 @@ extension MigraineEntryView {
         var greeting = ""
         static let greetingOptions: [String] = [
             String(localized: "We’ve got you."),
-            String(localized: "We’ll help you through this!"),
-            String(localized: "Sorry you’re dealing with this..."),
+            String(localized: "We’ll help you through this."),
+            String(localized: "Sorry you’re dealing with this."),
             String(localized: "Let’s get you some relief."),
             String(localized: "Here to help."),
         ]
@@ -134,9 +137,19 @@ extension MigraineEntryView {
 
         func healthStatusText(latest: HealthData?) -> String {
             if isPullingHealth { return String(localized: "Pulling from Apple Health") }
-            if healthError != nil { return String(localized: "Failed to pull from Apple Health") }
+            if healthError != nil { return String(localized: "Couldn't read Apple Health") }
+            switch healthNotice {
+            case .unavailable: return String(localized: "Apple Health isn't available on this device")
+            case .notConnected: return String(localized: "Apple Health isn't connected")
+            case nil: break
+            }
             if Calendar.current.isDateInToday(startDate) { return String(localized: "Pulled from Apple Health") }
             return String(localized: "Health data from \(startDate.formatted(date: .abbreviated, time: .omitted))")
+        }
+
+        var weatherNeedsLocation: Bool {
+            guard let error = weatherError as? WeatherError else { return false }
+            return error == .locationUnavailable || error == .locationProviderMissing
         }
 
         func weatherStatusText() -> String {
@@ -145,7 +158,8 @@ extension MigraineEntryView {
             if didPullWeather {
                 return weatherError == nil ? String(localized: "Pulled local weather") : String(localized: "Using recent weather")
             }
-            return String(localized: "Failed to pull weather")
+            if weatherNeedsLocation { return String(localized: "Weather needs location access") }
+            return String(localized: "Couldn't pull weather")
         }
 
         func presentHealthInfo(latest: HealthData?) {
@@ -165,10 +179,21 @@ extension MigraineEntryView {
             isPullingHealth = true
             didPullHealth = false
             healthError = nil
+            healthNotice = nil
 
             await healthManager.refreshLatest(forMigraineStart: startDate)
 
-            if let error = healthManager.lastError {
+            if !healthManager.isAvailable {
+                healthNotice = .unavailable
+                didPullHealth = false
+            } else if !healthManager.isAuthorized {
+                healthNotice = .notConnected
+                didPullHealth = false
+            } else if healthManager.lastErrorIsAccessProblem {
+                // Access was never granted or was withdrawn: the calm "not connected" line with Connect.
+                healthNotice = .notConnected
+                didPullHealth = false
+            } else if let error = healthManager.lastError {
                 healthError = error
                 didPullHealth = false
             } else {

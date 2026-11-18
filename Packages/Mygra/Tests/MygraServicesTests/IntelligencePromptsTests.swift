@@ -21,7 +21,7 @@ struct IntelligencePromptsTests {
         let prompt = IntelligencePrompts.analysisPrompt(migraine: migraine, user: User(name: "Nick"))
         #expect(prompt.contains("User: Nick"))
         #expect(prompt.contains("Pain: 8/10, Stress: 4/10"))
-        #expect(prompt.contains("Duration: 2.0 hours"))
+        #expect(prompt.contains("Duration: 2 h"))
         #expect(prompt.contains("Selected triggers: Stress, deadline"))
         #expect(prompt.contains("Foods: Coffee"))
         #expect(prompt.contains("sleep=5.5h"))

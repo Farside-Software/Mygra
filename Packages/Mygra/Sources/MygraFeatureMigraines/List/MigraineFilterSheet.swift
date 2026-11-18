@@ -108,16 +108,17 @@ struct MigraineFilterSheet: View {
             }
         }
         .navigationTitle("Filter Migraines")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", role: .destructive) {
+                Button("Cancel", systemImage: "xmark", role: .destructive) {
                     Haptics.lightImpact()
                     cancel()
                 }
                 .foregroundStyle(.red)
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Apply") {
+                Button("Apply", systemImage: "checkmark") {
                     var filter = workingFilter
                     filter.dateRange = useDateRange ? min(startDate, endDate)...max(startDate, endDate) : nil
                     Haptics.success()

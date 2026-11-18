@@ -14,7 +14,7 @@ struct NoteDetailView: View {
     let note: String
 
     var body: some View {
-        InfoDetailView(title: String(localized: "Note")) {
+        MigraineCard("Note", systemImage: "note.text") {
             Text(note)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -26,7 +26,7 @@ struct TriggersDetailView: View {
     let customTriggers: [String]
 
     var body: some View {
-        InfoDetailView(title: String(localized: "Triggers")) {
+        MigraineCard("Triggers", systemImage: "exclamationmark.triangle") {
             TriggerChipFlow(labels: triggers.map(\.displayName) + customTriggers)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -38,11 +38,11 @@ private struct TriggerChipFlow: View {
     let labels: [String]
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), spacing: Brand.Space.sm, alignment: .leading)], alignment: .leading, spacing: Brand.Space.sm) {
+        FlowLayout(spacing: Brand.Space.sm, lineSpacing: Brand.Space.sm) {
             ForEach(labels, id: \.self) { label in
                 Text(label)
                     .font(.subheadline)
-                    .lineLimit(1)
+                    .multilineTextAlignment(.leading)
                     .padding(.horizontal, Brand.Space.md)
                     .padding(.vertical, 6)
                     .background(Capsule(style: .continuous).fill(Color.mygraPurple.opacity(0.14)))
@@ -59,12 +59,8 @@ struct WeatherDetailView: View {
     let useMetricUnits: Bool
 
     var body: some View {
-        InfoDetailView(title: String(localized: "Weather"), trailing: {
-            WeatherAttributionView()
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }) {
-            VStack(alignment: .leading, spacing: 8) {
+        MigraineCard("Weather", systemImage: "cloud.sun") {
+            VStack(alignment: .leading, spacing: Brand.Space.sm) {
                 if let place = weather.locationDescription, !place.isEmpty {
                     MetricRowView(String(localized: "Location")) {
                         MetricChip(place, systemImage: "location.fill", tint: .blue)
@@ -93,6 +89,10 @@ struct WeatherDetailView: View {
                     let text = useMetricUnits ? String(format: "%.0f hPa", pressure) : String(format: "%.2f inHg", pressure)
                     MetricChip(text, systemImage: "gauge.medium", tint: .teal)
                 }
+                WeatherAttributionView()
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, Brand.Space.xs)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -104,8 +104,8 @@ struct HealthDetailView: View {
     let useMetricUnits: Bool
 
     var body: some View {
-        InfoDetailView(title: String(localized: "Health")) {
-            VStack(alignment: .leading, spacing: 8) {
+        MigraineCard("Health", systemImage: "heart.text.square") {
+            VStack(alignment: .leading, spacing: Brand.Space.sm) {
                 if let water = health.waterLiters {
                     MetricRowView(String(localized: "Water")) {
                         let text = useMetricUnits
@@ -173,7 +173,7 @@ struct HealthDetailView: View {
 #if DEBUG
 #Preview {
     ScrollView {
-        VStack(spacing: 16) {
+        VStack(spacing: Brand.Space.lg) {
             NoteDetailView(note: "Flickering lights and skipped lunch.")
             TriggersDetailView(triggers: [.stress], customTriggers: ["Bright lights"])
             WeatherDetailView(weather: WeatherData(barometricPressureHpa: 1008, temperatureCelsius: 22, humidityPercent: 65, condition: .partlyCloudy, locationDescription: "Seattle, WA"), useMetricUnits: false)

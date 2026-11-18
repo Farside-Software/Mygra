@@ -40,7 +40,7 @@ public final class MigraineDataModel {
     @ObservationIgnored private let defaults: any KeyValueStoring
     @ObservationIgnored private let reviewPolicy: ReviewPromptPolicy
     @ObservationIgnored private let generateSampleDataUseCase: (any GenerateSampleData)?
-    @ObservationIgnored private let toastManager: ToastManager
+    @ObservationIgnored private let statusCenter: StatusCenter
 
     // MARK: - State
 
@@ -82,7 +82,7 @@ public final class MigraineDataModel {
         generateSampleData: (any GenerateSampleData)? = nil,
         appVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0",
         now: @escaping () -> Date = Date.init,
-        toastManager: ToastManager
+        statusCenter: StatusCenter
     ) {
         self.loadMigraines = loadMigraines
         self.findMigraineUseCase = findMigraine
@@ -103,7 +103,7 @@ public final class MigraineDataModel {
         self.reviewPolicy = ReviewPromptPolicy(store: defaults, appVersion: appVersion, now: now)
         reviewPolicy.recordLaunch()
         self.generateSampleDataUseCase = generateSampleData
-        self.toastManager = toastManager
+        self.statusCenter = statusCenter
         refresh()
         startObserving()
     }
@@ -132,7 +132,7 @@ public final class MigraineDataModel {
             changeStamp &+= 1
         } catch {
             Log.migraine.error("Migraine refresh failed: \(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
         }
     }
 
@@ -143,7 +143,7 @@ public final class MigraineDataModel {
             return try findMigraineUseCase(withID: id)
         } catch {
             Log.migraine.error("Migraine lookup failed: \(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
             return nil
         }
     }
@@ -268,7 +268,7 @@ public final class MigraineDataModel {
             return result
         } catch {
             Log.migraine.error("\(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
             return fallback
         }
     }

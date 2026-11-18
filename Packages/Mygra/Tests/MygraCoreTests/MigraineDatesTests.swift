@@ -48,10 +48,15 @@ struct MigraineDatesTests {
     }
 
     @Test(arguments: [
-        (0.0, "0m 00s"), (65.0, "1m 05s"), (3600.0, "1h 00m 00s"), (7325.0, "2h 02m 05s"), (-10.0, "0m 00s"),
+        (0.0, "0s"), (45.0, "45s"), (65.0, "1m"), (3600.0, "1h 00m"), (14400.0, "4h 00m"), (7325.0, "2h 02m"), (-10.0, "0s"),
     ])
     func durationString(seconds: Double, expected: String) {
         #expect(MigraineDates.durationString(seconds) == expected)
+    }
+
+    @Test(arguments: [(0.0, "0m 00s"), (65.0, "1m 05s"), (7325.0, "2h 02m 05s")])
+    func tickingDurationString(seconds: Double, expected: String) {
+        #expect(MigraineDates.durationString(seconds, ticking: true) == expected)
     }
 
     @Test(arguments: [(0.0, "0m"), (1800.0, "30m"), (5400.0, "1h 30m")])
@@ -116,5 +121,16 @@ struct MigraineRecencyTests {
         let items = [attack(endedHoursAgo: 400), attack(endedHoursAgo: 30)]
         // 30 hours ago is 1 or 2 calendar days depending on the host time zone.
         if case .daysAgo(let d) = MigraineRecency.of(items, hasOngoing: false, now: now) { #expect(d == 1 || d == 2) } else { Issue.record("expected daysAgo") }
+    }
+}
+
+@Suite("Duration phrase")
+struct DurationPhraseTests {
+    @Test("under an hour reads in minutes, never 0.0 hours")
+    func phrase() {
+        #expect(MigraineDates.durationPhrase(hours: 0.75) == "45 min")
+        #expect(MigraineDates.durationPhrase(hours: 0.01) == "1 min")
+        #expect(MigraineDates.durationPhrase(hours: 2) == "2 h")
+        #expect(MigraineDates.durationPhrase(hours: 1 + 20.0 / 60) == "1 h 20 min")
     }
 }

@@ -27,7 +27,7 @@ public final class SessionController {
     // MARK: - Graph
 
     public let container: ModelContainer
-    public let toastManager: ToastManager
+    public let statusCenter: StatusCenter
     public let migraineData: MigraineDataModel
     public let tagData: TagDataModel
     public let userData: UserDataModel
@@ -113,8 +113,8 @@ public final class SessionController {
         self.sharedDefaults = sharedDefaults
         self.indexDebounce = indexDebounce
 
-        let toastManager = ToastManager()
-        self.toastManager = toastManager
+        let statusCenter = StatusCenter()
+        self.statusCenter = statusCenter
 
         let subscription = subscription ?? SubscriptionManager(defaults: defaults)
         self.subscription = subscription
@@ -176,7 +176,7 @@ public final class SessionController {
             reviewRequester: reviewRequester,
             defaults: defaults,
             generateSampleData: sampleData,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
 
         tagData = TagDataModel(
@@ -187,7 +187,7 @@ public final class SessionController {
             reorderTags: ReorderTagsUseCase(repository: tagRepository),
             assignTags: AssignTagsUseCase(repository: tagRepository),
             observeChanges: observeChanges,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
 
         userData = UserDataModel(
@@ -196,7 +196,7 @@ public final class SessionController {
             updateUser: UpdateUserUseCase(repository: userRepository),
             deleteUser: DeleteUserUseCase(repository: userRepository),
             observeChanges: observeChanges,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
 
         let intelligence = IntelligenceService()
@@ -232,7 +232,7 @@ public final class SessionController {
             endAttack: EndAttackUseCase(repository: migraineRepository, end: endOngoing),
             coordinator: FinishLoggingCoordinator(defaults: defaults, scheduler: notifications),
             observeChanges: observeChanges,
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
         self.attackMode = attackMode
 
@@ -326,7 +326,7 @@ public final class SessionController {
     public func showEarlySupporterThanksIfNeeded() {
         guard subscription.shouldShowEarlySupporterThanks else { return }
         subscription.markEarlySupporterThanksShown()
-        toastManager.show(
+        statusCenter.show(
             message: String(localized: "Thanks for being an early supporter — Mygra Plus is yours for life."),
             style: .success,
             icon: "sparkles"

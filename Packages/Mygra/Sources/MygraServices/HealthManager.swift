@@ -201,6 +201,14 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
 
     public private(set) var isAuthorized = false
     public private(set) var lastError: (any Error)?
+    /// True when the last failure was HealthKit saying access is missing (denied or never
+    /// granted), as opposed to a read that broke. Callers treat it as "not connected".
+    public var lastErrorIsAccessProblem: Bool {
+        guard case .snapshotFailed(let underlying)? = lastError as? HealthError,
+              let hkError = underlying as? HKError else { return false }
+        return hkError.code == .errorAuthorizationDenied || hkError.code == .errorAuthorizationNotDetermined
+    }
+
     /// The most recently fetched snapshot (cached for UI).
     public private(set) var latestData: HealthData?
 
@@ -208,6 +216,14 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
         self.store = store
         self.queryClient = HealthQueryClient(store: store)
         refreshAuthorizationStatus()
+    }
+
+    /// False on devices without Health data (some iPads, simulators).
+    public var isAvailable: Bool {
+        #if DEBUG
+        if debugData != nil { return true }
+        #endif
+        return type(of: store).isHealthDataAvailable()
     }
 
     public convenience init() {
@@ -258,6 +274,8 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
 
     // MARK: - Authorization
 
+    private static let didRequestKey = "Health.didRequestAuthorization"
+
     public func requestAuthorization() async {
         guard type(of: store).isHealthDataAvailable() else {
             lastError = HealthError.healthDataUnavailable
@@ -267,6 +285,7 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
         }
         do {
             try await store.requestAuthorization(toShare: shareTypes, read: readTypes)
+            UserDefaults.standard.set(true, forKey: Self.didRequestKey)
             updateAuthorizationFlag()
             lastError = nil
         } catch {
@@ -279,8 +298,11 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
     /// Read access is "authorized" once every read type has been decided (HealthKit hides
     /// read denials; `.notDetermined` is the only observable signal).
     private func updateAuthorizationFlag() {
-        let undecided = readTypes.contains { store.authorizationStatus(for: $0) == .notDetermined }
-        isAuthorized = !undecided
+        // `authorizationStatus(for:)` only describes WRITE access, so read-only types
+        // (steps, heart rate, glucose, oxygen) stay `.notDetermined` forever. Judging by
+        // it made every launch look unauthorized and re-prompted. The request outcome is
+        // remembered instead: HealthKit shows its sheet once per type set anyway.
+        isAuthorized = UserDefaults.standard.bool(forKey: Self.didRequestKey)
         Log.health.info("Health authorization flag: \(self.isAuthorized)")
     }
 
@@ -297,11 +319,10 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
     }
 
     private func ensureAuthorized() async throws {
+        // Never prompts: the system sheet comes only from onboarding or an explicit Connect.
+        refreshAuthorizationStatus()
         if !isAuthorized {
-            await requestAuthorization()
-            if !isAuthorized {
-                throw HealthError.authorizationDenied
-            }
+            throw HealthError.authorizationDenied
         }
     }
 
@@ -338,6 +359,10 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
 
     /// Aggregates samples within the window into one `HealthData` snapshot.
     public func fetchSnapshot(from start: Date, to end: Date) async throws -> HealthData {
+        #if DEBUG
+        // `-MygraDebugHealth connected`: every window read (entry sheet, edits, refreshes) gets the canned data.
+        if let debugData { return debugData }
+        #endif
         try await ensureAuthorized()
 
         async let waterML = queryClient.sumQuantity(qtWater, unit: unitMilliliter, from: start, to: end)
@@ -379,11 +404,12 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
     /// authorization prompt; without access it simply clears the snapshot.
     public func refreshLatest(from start: Date, to end: Date) async {
         #if DEBUG
-        if let debugData { isAuthorized = true; latestData = debugData; return }
+        if let debugData { isAuthorized = true; lastError = nil; latestData = debugData; return }
         #endif
         refreshAuthorizationStatus()
         guard isAuthorized else {
             latestData = nil
+            lastError = nil
             return
         }
         do {

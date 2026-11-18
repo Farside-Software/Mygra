@@ -21,22 +21,12 @@ struct IntensityChartView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Label("Intensity Over Time", systemImage: "chart.xyaxis.line")
-                    .font(.headline)
-                Spacer()
-                if let onUpdateIntensity {
-                    Button(action: onUpdateIntensity) {
-                        Label("Update", systemImage: "waveform.path.ecg")
-                            .font(.subheadline)
-                    }
-                    .glassActionButton(tint: .mygraPurple)
-                    .controlSize(.small)
-                    .hoverHighlight()
-                }
+        MigraineCard("Intensity Over Time", systemImage: "chart.xyaxis.line", trailing: {
+            if let onUpdateIntensity {
+                MigraineQuietAction(title: "Update", systemImage: "waveform.path.ecg", action: onUpdateIntensity)
+                    .accessibilityIdentifier("updateIntensityButton")
             }
-
+        }) {
             if sortedSamples.isEmpty {
                 ContentUnavailableView("No Data", systemImage: "chart.line.downtrend.xyaxis", description: Text("No intensity samples recorded yet"))
                     .frame(height: 150)
@@ -46,30 +36,24 @@ struct IntensityChartView: View {
                 chart
             }
 
-            HStack(spacing: 16) {
-                LegendItem(color: .red, label: String(localized: "Pain"))
-                LegendItem(color: .indigo, label: String(localized: "Stress"))
+            if sortedSamples.count > 1 {
+                HStack(spacing: Brand.Space.lg) {
+                    LegendItem(color: .red, label: String(localized: "Pain"))
+                    LegendItem(color: .indigo, label: String(localized: "Stress"))
+                }
+                .font(.caption)
             }
-            .font(.caption)
         }
-        .padding(Brand.Space.lg)
-        .cardSurface()
     }
 
+    /// One reading is not a trend; the header already shows the levels, so say only that.
     private func singleSampleView(_ sample: IntensitySample) -> some View {
-        HStack(spacing: 24) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Pain").font(.caption).foregroundStyle(.secondary)
-                Text("\(sample.painLevel)").font(.title).fontWeight(.bold).foregroundStyle(.red)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Stress").font(.caption).foregroundStyle(.secondary)
-                Text("\(sample.stressLevel)").font(.title).fontWeight(.bold).foregroundStyle(.indigo)
-            }
-            Spacer()
-            Text("at start").font(.caption).foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 8)
+        Text(onUpdateIntensity != nil
+             ? "Only the starting reading is recorded so far. Update it as the migraine changes to see a trend."
+             : "Only one reading was recorded, so there is no trend to show.")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var chart: some View {

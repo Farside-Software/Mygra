@@ -17,11 +17,13 @@ public struct MigraineEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(HealthManager.self) private var healthManager
     @Environment(WeatherManager.self) private var weatherManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage(AppStorageKeys.useMetricUnits) private var useMetricUnits: Bool = false
 
     let onMigraineSaved: (Migraine) -> Void
 
     @State private var viewModel = ViewModel()
+    @State private var layout = LayoutProbe()
 
     public init(onMigraineSaved: @escaping (Migraine) -> Void) {
         self.onMigraineSaved = onMigraineSaved
@@ -29,116 +31,20 @@ public struct MigraineEntryView: View {
 
     public var body: some View {
         NavigationStack {
-            Form {
-                Text(viewModel.greeting.isEmpty ? "We've got you." : viewModel.greeting)
-                    .font(.system(.title3, design: .rounded, weight: .medium))
-                    .italic()
-                    .foregroundStyle(LinearGradient.mygraHorizontal)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
-
-                Section {
-                    DurationSection(
-                        startTitle: "Started",
-                        startDate: $viewModel.startDate,
-                        isOngoing: $viewModel.isOngoing,
-                        endDate: $viewModel.endDate,
-                        showLiveActivityNote: true
-                    )
-                } header: {
-                    Label("Duration", systemImage: "clock")
-                }
-
-                Section {
-                    healthCapsule
-                    if let health = healthManager.latestData, viewModel.healthError == nil {
-                        IntakeSection(
-                            baseHealth: health,
-                            isEditing: $viewModel.isEditingIntake,
-                            additions: $viewModel.additions,
-                            onConfirmAdd: {
-                                Haptics.success()
-                                withAnimation { viewModel.isEditingIntake = false }
-                            },
-                            onCancel: { viewModel.clearStagedIntake() }
-                        )
-                    }
-                    weatherCapsule
-                    if viewModel.didPullWeather, let reading = weatherManager.reading {
-                        weatherSummary(reading)
-                    }
-                } header: {
-                    Label("Context", systemImage: "heart.text.square")
-                } footer: {
-                    Text("Health and weather for this time window are attached to the record automatically.")
-                }
-
-                Section {
-                    LevelSlider.pain(level: $viewModel.painLevel)
-                    LevelSlider.stress(level: $viewModel.stressLevel)
-                    Toggle(isOn: $viewModel.pinned) {
-                        Label("Pin this migraine", systemImage: "pin")
-                    }
-                    .tint(.yellow)
-                    .onChange(of: viewModel.pinned) { _, _ in Haptics.lightImpact() }
-                } header: {
-                    Label("Experience", systemImage: "bolt.heart")
-                }
-
-                Section {
-                    SearchField("Search triggers", text: $viewModel.triggerSearchText)
-                    TriggerPickerSection(selection: $viewModel.selectedTriggers, searchText: viewModel.triggerSearchText)
-                    customTriggerEditor
-                    if viewModel.selectedTriggerCount == 0 {
-                        Text("No triggers selected").foregroundStyle(.secondary)
-                    } else {
-                        Text("\(viewModel.selectedTriggerCount) selected")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .contentTransition(.numericText())
-                    }
-                } header: {
-                    Label("Possible Triggers", systemImage: "exclamationmark.triangle")
-                }
-
-                Section {
-                    TextEditor(text: $viewModel.foodsText)
-                        .frame(minHeight: 80)
-                        .overlay(alignment: .topLeading) {
-                            if viewModel.foodsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                placeholder("List foods eaten around this time (comma or newline separated)")
-                            }
-                        }
-                } header: {
-                    Label("Food Sensitivities", systemImage: "fork.knife")
-                }
-
-                Section {
-                    TextEditor(text: $viewModel.noteText)
-                        .frame(minHeight: 120)
-                        .overlay(alignment: .topLeading) {
-                            if viewModel.noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                placeholder("Add any details you want to remember")
-                            }
-                        }
-                } header: {
-                    Label("Notes", systemImage: "note.text")
-                }
-            }
-            .formStyle(.grouped)
+            formPanes
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("New Migraine")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) {
+                    Button("Cancel", systemImage: "xmark", role: .cancel) {
                         Haptics.lightImpact()
                         viewModel.clearStagedIntake()
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(viewModel.isOngoing ? "Start" : "Save") {
+                    Button(viewModel.isOngoing ? "Start" : "Save", systemImage: "checkmark") {
                         Haptics.lightImpact()
                         Task {
                             guard viewModel.validateBeforeSave() else {
@@ -157,6 +63,7 @@ public struct MigraineEntryView: View {
             }
         }
         .presentationSizing(.page)
+        .containerLayoutProbe { layout = $0 }
         .task {
             viewModel.resetGreeting()
             if viewModel.endDate < viewModel.startDate { viewModel.endDate = viewModel.startDate }
@@ -180,6 +87,148 @@ public struct MigraineEntryView: View {
         }
     }
 
+    // MARK: - Layout
+
+    private var isWide: Bool {
+        MigraineLayout.isWide(layout, isRegularWidth: horizontalSizeClass == .regular)
+    }
+
+    /// One form on the phone and the folded Duo. On the unfolded Duo and on iPad the sheet is
+    /// as wide as two phones, so it splits into two independent forms around the hinge:
+    /// when and how it felt on the left, what surrounded it on the right.
+    @ViewBuilder
+    private var formPanes: some View {
+        if isWide {
+            // The two forms are split at the fold (centre of the window when there is none) with
+            // a clear gap there, so no card crosses the hinge.
+            let gap = layout.hasFold ? Brand.Space.xxl * 2 : MigraineLayout.columnGap(layout)
+            let leading = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? max(layout.width / 2 - gap / 2, 0)
+            FoldSplitLayout(leadingWidth: leading, separatorWidth: gap) {
+                Form {
+                    greetingRow
+                    whenSections
+                }
+                .formStyle(.grouped)
+                Color.clear
+                Form {
+                    surroundingsSections
+                }
+                .formStyle(.grouped)
+            }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        } else {
+            Form {
+                greetingRow
+                whenSections
+                surroundingsSections
+            }
+            .formStyle(.grouped)
+        }
+    }
+
+    private var greetingRow: some View {
+        Text(viewModel.greeting.isEmpty ? "We've got you." : viewModel.greeting)
+                    .font(.system(.title3, design: .rounded, weight: .medium))
+                    .italic()
+                    .foregroundStyle(LinearGradient.mygraHorizontal)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private var whenSections: some View {
+        Section {
+            DurationSection(
+                startTitle: "Started",
+                startDate: $viewModel.startDate,
+                isOngoing: $viewModel.isOngoing,
+                endDate: $viewModel.endDate,
+                showLiveActivityNote: true
+            )
+        } header: {
+            Label("Duration", systemImage: "clock")
+        }
+
+        Section {
+            healthCapsule
+            if let health = healthManager.latestData, viewModel.healthError == nil {
+                IntakeSection(
+                    baseHealth: health,
+                    isEditing: $viewModel.isEditingIntake,
+                    additions: $viewModel.additions,
+                    onConfirmAdd: {
+                        Haptics.success()
+                        withAnimation { viewModel.isEditingIntake = false }
+                    },
+                    onCancel: { viewModel.clearStagedIntake() }
+                )
+            }
+            weatherCapsule
+            if viewModel.didPullWeather, let reading = weatherManager.reading {
+                weatherSummary(reading)
+            }
+        } header: {
+            Label("Context", systemImage: "heart.text.square")
+        } footer: {
+            Text("Health and weather for this time window are attached to the record automatically.")
+        }
+
+        Section {
+            LevelSlider.pain(level: $viewModel.painLevel)
+            LevelSlider.stress(level: $viewModel.stressLevel)
+            Toggle(isOn: $viewModel.pinned) {
+                Label("Pin this migraine", systemImage: "pin")
+            }
+            .tint(.yellow)
+            .onChange(of: viewModel.pinned) { _, _ in Haptics.lightImpact() }
+        } header: {
+            Label("Experience", systemImage: "bolt.heart")
+        }
+    }
+
+    @ViewBuilder
+    private var surroundingsSections: some View {
+        Section {
+            SearchField("Search triggers", text: $viewModel.triggerSearchText)
+            TriggerPickerSection(selection: $viewModel.selectedTriggers, searchText: viewModel.triggerSearchText)
+            customTriggerEditor
+            if viewModel.selectedTriggerCount == 0 {
+                Text("No triggers selected").foregroundStyle(.secondary)
+            } else {
+                Text("\(viewModel.selectedTriggerCount) selected")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
+            }
+        } header: {
+            Label("Possible Triggers", systemImage: "exclamationmark.triangle")
+        }
+
+        Section {
+            TextEditor(text: $viewModel.foodsText)
+                .frame(minHeight: 80)
+                .overlay(alignment: .topLeading) {
+                    if viewModel.foodsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        placeholder("List foods eaten around this time (comma or newline separated)")
+                    }
+                }
+        } header: {
+            Label("Food Sensitivities", systemImage: "fork.knife")
+        }
+
+        Section {
+            TextEditor(text: $viewModel.noteText)
+                .frame(minHeight: 120)
+                .overlay(alignment: .topLeading) {
+                    if viewModel.noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        placeholder("Add any details you want to remember")
+                    }
+                }
+        } header: {
+            Label("Notes", systemImage: "note.text")
+        }
+    }
+
     private func refreshRetrieval() async {
         await viewModel.startHealthFetch(using: healthManager)
         await viewModel.startWeatherFetch(using: weatherManager)
@@ -193,7 +242,9 @@ public struct MigraineEntryView: View {
             if viewModel.isPullingHealth {
                 ProgressView().controlSize(.small)
             } else if viewModel.healthError != nil {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+                Image(systemName: "heart.slash").foregroundStyle(.secondary)
+            } else if viewModel.healthNotice != nil {
+                Image(systemName: "heart.slash").foregroundStyle(.secondary)
             } else if viewModel.didPullHealth {
                 if zeroMetrics.isEmpty {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green.gradient)
@@ -203,15 +254,25 @@ public struct MigraineEntryView: View {
             }
 
             Text(viewModel.healthStatusText(latest: healthManager.latestData))
-                .foregroundStyle(viewModel.healthError == nil ? .primary : .secondary)
+                .foregroundStyle(viewModel.healthError == nil && viewModel.healthNotice == nil ? .primary : .secondary)
                 .font(.subheadline)
-                .bold(viewModel.healthError != nil)
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.2), value: viewModel.startDate)
 
             Spacer(minLength: 0)
 
-            if !viewModel.isPullingHealth && (viewModel.healthError != nil || !zeroMetrics.isEmpty) {
+            if !viewModel.isPullingHealth, viewModel.healthNotice == .notConnected {
+                Button("Connect") {
+                    Haptics.lightImpact()
+                    Task {
+                        await healthManager.requestAuthorization()
+                        await viewModel.startHealthFetch(using: healthManager)
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.mygraBlue)
+            } else if !viewModel.isPullingHealth && (viewModel.healthError != nil || !zeroMetrics.isEmpty) {
                 Button {
                     viewModel.presentHealthInfo(latest: healthManager.latestData)
                 } label: {
@@ -220,8 +281,8 @@ public struct MigraineEntryView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.vertical, Brand.Space.md)
         .background(Capsule().fill(.thinMaterial))
     }
 
@@ -232,14 +293,16 @@ public struct MigraineEntryView: View {
                     ProgressView().controlSize(.small)
                 } else if viewModel.didPullWeather {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                } else if viewModel.weatherNeedsLocation {
+                    Image(systemName: "location.slash").foregroundStyle(.secondary)
                 } else if viewModel.weatherError != nil {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+                    Image(systemName: "cloud.slash").foregroundStyle(.secondary)
                 }
 
                 Text(viewModel.weatherStatusText())
                     .foregroundStyle((viewModel.didPullWeather || viewModel.showWeatherBackdateAlert) ? .primary : .secondary)
                     .font(.subheadline)
-                    .bold(!viewModel.didPullWeather && viewModel.weatherError != nil)
+                    .bold(!viewModel.didPullWeather && viewModel.weatherError != nil && !viewModel.weatherNeedsLocation)
 
                 Spacer()
             }
@@ -252,8 +315,8 @@ public struct MigraineEntryView: View {
                 .padding(.top, 2)
                 .padding(.leading, 5)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.vertical, Brand.Space.md)
         .background(Capsule().fill(.thinMaterial))
     }
 

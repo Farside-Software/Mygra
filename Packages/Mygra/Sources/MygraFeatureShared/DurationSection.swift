@@ -40,7 +40,7 @@ public struct DurationSection: View {
             DatePicker("Ended", selection: $endDate, in: startDate...Date(), displayedComponents: [.date, .hourAndMinute])
                 .tint(.mygraPurple)
         } else if showLiveActivityNote {
-            Text("We'll start a neat little Live Activity to help you track duration!")
+            Text("A Live Activity will track the duration on your Lock Screen.")
                 .foregroundStyle(.gray)
         }
     }

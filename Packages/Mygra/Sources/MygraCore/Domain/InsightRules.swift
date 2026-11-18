@@ -88,7 +88,7 @@ public enum InsightRules {
                 Insight(
                     category: .trendDuration,
                     title: String(localized: "Migraine duration \(direction)"),
-                    message: String(format: String(localized: "Avg duration last 2 weeks: %.2f h vs prior: %.2f h."), dr, dp),
+                    message: String(format: String(localized: "Avg duration last 2 weeks: %@ vs prior: %@."), MigraineDates.durationPhrase(hours: dr), MigraineDates.durationPhrase(hours: dp)),
                     priority: dr > dp ? .medium : .low,
                     tags: ["recent": dr, "prior": dp]
                 )

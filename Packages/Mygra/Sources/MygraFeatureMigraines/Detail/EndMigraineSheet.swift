@@ -40,10 +40,10 @@ struct EndMigraineSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", systemImage: "xmark", role: .cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("End") { onConfirm(endDate) }
+                    Button("End", systemImage: "checkmark") { onConfirm(endDate) }
                         .bold()
                         .tint(.mygraPurple)
                         .keyboardShortcut(.defaultAction)

@@ -40,62 +40,77 @@ private struct DaysSinceLastMigraineView: View {
 
     @Environment(\.widgetFamily) private var family
 
-    private func encouragement(for days: Int) -> String {
-        if days == 0 { return String(localized: "Hang in there.") }
-        if days <= 2 { return String(localized: "Keep it up!") }
-        if days >= 14 { return String(localized: "Great job!") }
-        let options = [
-            String(localized: "Small steps add up."),
-            String(localized: "You're doing your best."),
-            String(localized: "One day at a time."),
-            String(localized: "Progress over perfection."),
-            String(localized: "You've got this."),
-        ]
-        return options.randomElement() ?? options[0]
+    /// One calm, fixed line per range. No random copy, so the widget does not change its
+    /// wording on every refresh.
+    private var caption: String {
+        switch entry.daysSince {
+        case 0: return String(localized: "Today")
+        case 1: return String(localized: "Day since your last migraine")
+        default: return String(localized: "Days since your last migraine")
+        }
     }
 
     var body: some View {
-        VStack(alignment: .center, spacing: 4) {
-            Text("Days Since Last Migraine")
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.center)
-                .lineSpacing(1.5)
-                .textCase(.uppercase)
-                .tracking(0.5)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            Spacer(minLength: 0)
-
-            Text(String(entry.daysSince))
-                .font(.system(size: 56, weight: .black, design: .rounded))
-                .monospacedDigit()
-                .minimumScaleFactor(0.4)
-                .lineLimit(1)
-                .shadow(radius: 4)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .accessibilityLabel("Days since last migraine: \(entry.daysSince)")
-
-            if family != .systemSmall {
-                Text(encouragement(for: entry.daysSince))
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
-                    .padding(.top, 2)
-                    .frame(maxWidth: .infinity, alignment: .center)
+        Group {
+            switch family {
+            case .accessoryCircular:
+                ZStack {
+                    AccessoryWidgetBackground()
+                    VStack(spacing: 0) {
+                        Text(String(entry.daysSince))
+                            .font(.system(size: 24, weight: .semibold, design: .rounded))
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.5)
+                            .widgetAccentable()
+                        Text("days")
+                            .font(.caption2)
+                    }
+                }
+            case .accessoryRectangular:
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(String(entry.daysSince))
+                        .font(.system(size: 30, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .widgetAccentable()
+                    Text("Days since last migraine")
+                        .font(.caption)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            case .accessoryInline:
+                Text("\(entry.daysSince) days since last migraine")
+            default:
+                homeScreenLayout
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Days since last migraine: \(entry.daysSince)")
         .containerBackground(for: .widget) {
             LinearGradient(
-                colors: [Color.mygraPurple.opacity(0.25), Color.mygraBlue.opacity(0.25)],
+                colors: [Color.mygraPurple.opacity(0.22), Color.mygraBlue.opacity(0.22)],
                 startPoint: .topTrailing,
                 endPoint: .bottomLeading
             )
         }
+    }
+
+    private var homeScreenLayout: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Label("Mygra", systemImage: "brain.head.profile.fill")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.mygraPurple)
+            Spacer(minLength: 0)
+            Text(String(entry.daysSince))
+                .font(.system(size: family == .systemSmall ? 64 : 76, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+            Text(caption)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 
@@ -106,7 +121,7 @@ struct MygraWidgetsDaysSinceLastMigraine: Widget {
         }
         .configurationDisplayName("Days Since Last Migraine")
         .description("Shows how many days it has been since your last migraine.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 

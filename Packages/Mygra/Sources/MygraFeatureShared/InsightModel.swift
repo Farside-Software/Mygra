@@ -14,6 +14,7 @@
 import Foundation
 import Observation
 import MygraCore
+import MygraServices
 import os
 
 @MainActor
@@ -54,6 +55,14 @@ public final class InsightModel {
     /// Whether rule-based Quick Bits are unlocked.
     public var canViewQuickBits: Bool { entitlement.gate.unlocks(.quickBits) }
     public var conversation: [ChatMessage] { intelligence.conversation }
+    /// True while a reply has been requested but its first words have not arrived yet
+    /// (the assistant streams replies into the conversation as they are written).
+    public var isAwaitingFirstToken: Bool {
+        guard isSending, let last = intelligence.conversation.last else { return false }
+        return last.role == .assistant && last.content.isEmpty
+    }
+    /// Questions offered before the first message, each answerable from the user's log.
+    public var starterQuestions: [String] { IntelligencePrompts.starterQuestions }
     public var isChatActive: Bool { intelligence.isChatActive }
 
     // MARK: - Init
@@ -196,6 +205,8 @@ public final class InsightModel {
         defer { isSending = false }
         do {
             return try await intelligence.send(message: text)
+        } catch IntelligenceError.declined {
+            return IntelligenceError.declined.errorDescription ?? Self.chatFailureReply
         } catch {
             record(.chatFailed(error.localizedDescription))
             return Self.chatFailureReply
@@ -207,7 +218,7 @@ public final class InsightModel {
     }
 
     /// The reply shown when a send fails (views use it to pick an error haptic).
-    public static let chatFailureReply = String(localized: "Sorry, I ran into a problem.")
+    public static let chatFailureReply = IntelligencePrompts.chatFailureReply
 
     // MARK: - Errors
 

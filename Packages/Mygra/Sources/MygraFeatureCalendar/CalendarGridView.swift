@@ -16,6 +16,9 @@ struct CalendarGridView: View {
     let migraines: [Migraine]
     /// Marks period days (Cycle Insights). Nil leaves the grid exactly as before.
     var isPeriodDay: ((Date) -> Bool)? = nil
+    /// The height of one day. The folded iPhone Duo is wide and tall, so it uses a slightly
+    /// shorter cell to leave the selected day's migraines more room under the month.
+    var cellHeight: CGFloat = 44
 
     private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.flexible()), count: 7)
@@ -42,10 +45,11 @@ struct CalendarGridView: View {
                             isToday: calendar.isDateInToday(date),
                             isPeriodDay: isPeriodDay?(date) ?? false,
                             migrainesForDay: MigraineStatistics.migraines(migraines, on: date, calendar: calendar),
+                            height: cellHeight,
                             onTap: { selectedDate = date }
                         )
                     } else {
-                        Color.clear.frame(height: 44)
+                        Color.clear.frame(height: cellHeight)
                     }
                 }
             }
@@ -77,6 +81,7 @@ private struct DayCell: View {
     let isToday: Bool
     let isPeriodDay: Bool
     let migrainesForDay: [Migraine]
+    let height: CGFloat
     let onTap: () -> Void
 
     private let calendar = Calendar.current
@@ -88,19 +93,19 @@ private struct DayCell: View {
         } label: {
             VStack(spacing: 4) {
                 Text(calendar.component(.day, from: date), format: .number)
-                    .font(.body)
+                    .font(height >= 56 ? .title3 : .body)
                     .fontWeight(isToday || isSelected ? .bold : .regular)
                     .monospacedDigit()
                     .foregroundStyle(isSelected ? .white : (isToday ? .mygraBlue : .primary))
 
                 if migrainesForDay.isEmpty {
-                    Color.clear.frame(height: 6)
+                    Color.clear.frame(height: height >= 56 ? 8 : 6)
                 } else {
                     HStack(spacing: 2) {
                         ForEach(migrainesForDay.prefix(3)) { migraine in
                             Circle()
                                 .fill(migraine.severity.color)
-                                .frame(width: 6, height: 6)
+                                .frame(width: height >= 56 ? 8 : 6, height: height >= 56 ? 8 : 6)
                         }
                         if migrainesForDay.count > 3 {
                             Text("+")
@@ -111,7 +116,7 @@ private struct DayCell: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 44)
+            .frame(height: height)
             .background(
                 RoundedRectangle(cornerRadius: Brand.Radius.chip, style: .continuous)
                     .fill(isSelected ? AnyShapeStyle(LinearGradient.mygra) : AnyShapeStyle(isPeriodDay ? Color.pink.opacity(0.18) : Color.clear))

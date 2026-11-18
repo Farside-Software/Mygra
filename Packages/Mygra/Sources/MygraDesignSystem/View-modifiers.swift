@@ -230,11 +230,7 @@ extension View {
     @ContentBuilder
     public func navigationSubtitleIfAvailable(_ subtitle: String) -> some View {
         #if os(iOS)
-        if #available(iOS 26.0, *) {
-            navigationSubtitle(subtitle)
-        } else {
-            self
-        }
+        statusSubtitle(replacing: subtitle)
         #else
         self
         #endif

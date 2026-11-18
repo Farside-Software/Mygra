@@ -52,7 +52,7 @@ struct TodayCardView: View {
     private var authorizedCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Today", systemImage: "calendar")
+                Label { Text("Today") } icon: { Image(systemName: "calendar").foregroundStyle(Color.mygraPurple) }
                     .font(.headline)
                 Spacer()
                 Button {
@@ -143,7 +143,7 @@ struct TodayCardView: View {
                 .transition(.verticalScaleFromTop)
             }
         }
-        .padding(14)
+        .padding(Brand.Space.lg)
         .cardSurface()
         .clipped()
         .accessibilityElement(children: .contain)
@@ -171,8 +171,8 @@ struct TodayCardView: View {
                 .hoverHighlight()
                 .accessibilityLabel("Connect Apple Health")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.vertical, Brand.Space.md)
         .cardSurface()
     }
 
