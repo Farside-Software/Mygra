@@ -3,9 +3,11 @@
 //  MygraServices
 //
 //  Apple Intelligence (Foundation Models, iOS 26+) behind the Core `MigraineIntelligence`
-//  seam: single-migraine analysis, Quick Bit explanations, and the multi-turn analyst
-//  chat. Every model call is availability-gated so the module compiles for the iOS 18
-//  floor; prompts are built by pure helpers that are host-tested.
+//  seam: single-migraine analysis, Quick Bit explanations (guided generation), and the
+//  multi-turn analyst chat, which streams its replies and looks entries up through
+//  read-only tools over the user's own records. Everything runs on device. Every model
+//  call is availability-gated so the module compiles for the iOS 18 floor; prompts are
+//  built by pure helpers that are host-tested.
 //
 
 import Foundation
@@ -19,14 +21,28 @@ import FoundationModels
 nonisolated public enum IntelligenceError: LocalizedError {
     case unavailable
     case chatInactive
+    case declined
 
     public var errorDescription: String? {
         switch self {
         case .unavailable: return String(localized: "Apple Intelligence is not available on this device.")
         case .chatInactive: return String(localized: "Chat session is not active. Please start a new analysis chat.")
+        case .declined: return String(localized: "I can't help with that one. Try asking about the entries in your log.")
         }
     }
 }
+
+#if canImport(FoundationModels)
+/// The explanation the model fills in directly (guided generation), replacing JSON parsing.
+@available(iOS 26.0, macOS 26.0, *)
+@Generable
+nonisolated struct GeneratedExplanation {
+    @Guide(description: "One or two plain sentences describing what the insight shows in the user's own log. Descriptive only, no advice.")
+    var summary: String
+    @Guide(description: "One short, non-medical thing the user could look at in their own log next, phrased as a suggestion to look, not as treatment or advice.")
+    var nextLook: String
+}
+#endif
 
 @MainActor
 @Observable
@@ -37,6 +53,14 @@ public final class IntelligenceService: MigraineIntelligence {
 
     /// Holds a `LanguageModelSession` on supported OS versions.
     @ObservationIgnored private var chatSession: AnyObject?
+    /// What the chat was started with, so a session can be rebuilt after a context overflow.
+    @ObservationIgnored private var chatContext: ChatContext?
+
+    private struct ChatContext {
+        let snapshots: [MigraineSnapshot]
+        let userSummary: String
+        let historySummary: String
+    }
 
     public init() {}
 
@@ -56,7 +80,10 @@ public final class IntelligenceService: MigraineIntelligence {
         guard isAvailable else { return nil }
         if #available(iOS 26.0, macOS 26.0, *) {
             let session = LanguageModelSession(instructions: IntelligencePrompts.analysisInstructions)
-            let response = try await session.respond(to: IntelligencePrompts.analysisPrompt(migraine: migraine, user: user))
+            let response = try await session.respond(
+                to: IntelligencePrompts.analysisPrompt(migraine: migraine, user: user),
+                options: GenerationOptions(temperature: 0.4)
+            )
             return response.content
         }
         #endif
@@ -70,8 +97,17 @@ public final class IntelligenceService: MigraineIntelligence {
         guard isAvailable else { return nil }
         if #available(iOS 26.0, macOS 26.0, *) {
             let session = LanguageModelSession(instructions: IntelligencePrompts.explanationInstructions)
-            let response = try await session.respond(to: IntelligencePrompts.explanationPrompt(insight: insight, user: user))
-            return IntelligencePrompts.parseExplanation(response.content, fallbackDescription: insight.message)
+            let prompt = IntelligencePrompts.explanationPrompt(insight: insight, user: user)
+            do {
+                let generated = try await session.respond(to: prompt, generating: GeneratedExplanation.self, options: GenerationOptions(temperature: 0.3)).content
+                return QuickBitExplanation(description: generated.summary, recommendation: generated.nextLook)
+            } catch let error as LanguageModelSession.GenerationError {
+                // Guided generation can fail on an oddly shaped insight; fall back to plain text.
+                Log.intelligence.error("Guided explanation failed, falling back to text: \(error.localizedDescription)")
+                let fallback = LanguageModelSession(instructions: IntelligencePrompts.explanationFallbackInstructions)
+                let response = try await fallback.respond(to: prompt)
+                return IntelligencePrompts.parseExplanation(response.content, fallbackDescription: insight.message)
+            }
         }
         #endif
         return nil
@@ -83,42 +119,80 @@ public final class IntelligenceService: MigraineIntelligence {
         guard isAvailable else { return }
         conversation.removeAll()
 
-        let userSummary = IntelligencePrompts.summarize(user: user)
-        let historySummary = IntelligencePrompts.summarize(migraines: migraines, limit: 50)
-        let dataset = IntelligencePrompts.historyDataset(migraines: migraines, limit: 60)
-
-        conversation.append(.system(IntelligencePrompts.chatSystemPrompt))
-        conversation.append(.system("Entries (most recent first):\n\(dataset.table)"))
-        conversation.append(.system("EntriesJSON:\n\(dataset.json)"))
-        if !userSummary.isEmpty { conversation.append(.system("User profile: \(userSummary)")) }
-        if !historySummary.isEmpty { conversation.append(.system("Migraine history summary: \(historySummary)")) }
+        let snapshots = migraines.map(MigraineSnapshot.init)
+        let context = ChatContext(
+            snapshots: snapshots,
+            userSummary: IntelligencePrompts.summarize(user: user),
+            historySummary: IntelligencePrompts.summarize(migraines: migraines, limit: 50)
+        )
+        chatContext = context
         conversation.append(.assistant(IntelligencePrompts.chatGreeting(entryCount: min(migraines.count, 60))))
 
         #if canImport(FoundationModels)
         if #available(iOS 26.0, macOS 26.0, *) {
-            chatSession = LanguageModelSession(instructions: IntelligencePrompts.chatInstructions(userSummary: userSummary, historySummary: historySummary))
+            let session = makeChatSession(context)
+            session.prewarm()
+            chatSession = session
             isChatActive = true
         }
         #endif
     }
 
+    #if canImport(FoundationModels)
+    @available(iOS 26.0, macOS 26.0, *)
+    private func makeChatSession(_ context: ChatContext) -> LanguageModelSession {
+        LanguageModelSession(
+            tools: [FindMigrainesTool(snapshots: context.snapshots), MigraineSummaryTool(snapshots: context.snapshots)],
+            instructions: IntelligencePrompts.chatInstructions(userSummary: context.userSummary, historySummary: context.historySummary)
+        )
+    }
+    #endif
+
+    /// Sends a message and streams the reply into `conversation` as it is written. Returns
+    /// the finished reply.
     public func send(message: String) async throws -> String {
         guard isAvailable else { throw IntelligenceError.unavailable }
         guard isChatActive else { throw IntelligenceError.chatInactive }
         conversation.append(.user(message))
+        conversation.append(.assistant(""))
+        let replyIndex = conversation.count - 1
 
         #if canImport(FoundationModels)
-        if #available(iOS 26.0, macOS 26.0, *), let session = chatSession as? LanguageModelSession {
-            let reply = try await session.respond(to: message).content
-            conversation.append(.assistant(reply))
-            return reply
+        if #available(iOS 26.0, macOS 26.0, *), var session = chatSession as? LanguageModelSession {
+            var retriedAfterOverflow = false
+            while true {
+                do {
+                    var latest = ""
+                    for try await snapshot in session.streamResponse(to: message, options: GenerationOptions(temperature: 0.3)) {
+                        latest = snapshot.content
+                        conversation[replyIndex] = .assistant(latest)
+                    }
+                    chatSession = session
+                    return latest
+                } catch LanguageModelSession.GenerationError.exceededContextWindowSize where !retriedAfterOverflow {
+                    // The conversation outgrew the on-device window: start a fresh session
+                    // with the same instructions and tools, then ask again.
+                    retriedAfterOverflow = true
+                    guard let context = chatContext else { break }
+                    session = makeChatSession(context)
+                    conversation[replyIndex] = .assistant("")
+                } catch LanguageModelSession.GenerationError.guardrailViolation {
+                    conversation[replyIndex] = .assistant(IntelligenceError.declined.errorDescription ?? "")
+                    throw IntelligenceError.declined
+                } catch {
+                    conversation[replyIndex] = .assistant(IntelligencePrompts.chatFailureReply)
+                    throw error
+                }
+            }
         }
         #endif
+        conversation[replyIndex] = .assistant(IntelligencePrompts.chatFailureReply)
         throw IntelligenceError.chatInactive
     }
 
     public func resetChat() {
         chatSession = nil
+        chatContext = nil
         conversation.removeAll()
         isChatActive = false
     }
@@ -128,43 +202,58 @@ public final class IntelligenceService: MigraineIntelligence {
 
 public enum IntelligencePrompts {
 
+    /// The disclaimer every generated explanation ends with.
+    public static let analysisDisclaimer = "This describes your own log and is not medical advice."
+
     public static let analysisInstructions = """
-    You are a data analyst for health logs.
-    Provide a concise explanation of likely contributing factors for this single migraine event based ONLY on the provided fields.
-    Then offer up to two non-clinical, everyday mitigation ideas tied to those factors (e.g., hydration, sleep regularity, screen breaks, balanced meals, stress-reduction techniques, indoor air/lighting adjustments).
-    Do NOT provide medical diagnoses, prescriptions, or treatment plans. Use conditional, non-prescriptive language (e.g., "you could try", "might help").
-    Keep it to 2–4 sentences, neutral and practical.
-    End with: "This is general, non-medical guidance and not a diagnosis."
+    You summarize one entry from a person's own migraine log.
+    Describe only what the entry records: pain and stress levels, how long it lasted, the triggers the person selected, and any intake, sleep, or weather figures logged around it.
+    You may point out which logged figures stood out, for example short sleep or a low pressure reading, as things that were recorded at the same time. Never say they caused the migraine.
+    Do not diagnose, do not predict future migraines, and do not suggest medication, doses, or treatment. Do not give advice.
+    Write 2 to 4 plain sentences. End with: "\(analysisDisclaimer)"
     """
 
     public static let explanationInstructions = """
-    You are a clear, neutral explainer for health logging insights.
-    Based only on the provided fields, write:
-    1) a brief, 1-2 sentence description explaining the insight in everyday terms, and
-    2) one practical, non-medical recommendation relevant to this insight.
-    Avoid medical diagnoses or treatment advice. Keep tone supportive and neutral.
-    Output strictly as JSON with keys: {"description": string, "recommendation": string}. Do not wrap in markdown code fences; return only the JSON object.
+    You explain one pattern shown in a person's own migraine log, in everyday words.
+    Stay descriptive: say what the log shows, not what it means medically. Never diagnose, predict, or suggest medication or treatment.
+    The second part is only something the person could look at in their own log next, for example comparing sleep on migraine days. It is not advice.
     """
 
-    public static let chatSystemPrompt = """
-    You are a data analyst focused on migraine log trends. Provide descriptive, evidence-informed pattern analysis.
-    Stay strictly non-medical: do NOT give advice, diagnoses, or treatment suggestions.
-    Encourage the user to consult a clinician for persistent or severe issues.
+    /// Used when guided generation fails and the model is asked for plain text instead.
+    public static let explanationFallbackInstructions = """
+    \(explanationInstructions)
+    Reply with two short lines. Line one: what the log shows. Line two: one thing the person could look at in their own log next.
     """
 
-    public static func chatInstructions(userSummary: String, historySummary: String) -> String {
+    public static let chatFailureReply = String(localized: "Sorry, I ran into a problem.")
+
+    /// Questions the assistant offers before the first message, each answerable from the log.
+    public static var starterQuestions: [String] {
+        [
+            String(localized: "How many migraines did I have this month?"),
+            String(localized: "Which triggers do I log most often?"),
+            String(localized: "When was my last severe migraine?"),
+            String(localized: "What did I take for my last migraine?"),
+        ]
+    }
+
+    public static func chatInstructions(userSummary: String, historySummary: String, now: Date = Date(), calendar: Calendar = .current) -> String {
         var instructions = """
-        You are a data analyst for migraine logs. Be neutral, concise, and purely descriptive.
-        Use the user's profile and migraine history only to identify trends, correlations, and patterns.
-        You are provided with two views of the data: a Markdown table (Entries) and a JSON array (EntriesJSON).
-        When the user asks whether a pattern appears "in my entries," reference specific rows by date or fields from Entries/EntriesJSON.
-        Prefer concrete, data-backed statements over generalities. If the data is insufficient, say what additional fields would help.
-        Do NOT provide concrete medical advice, diagnoses, or treatment suggestions, though you can state the obvious.
-        Return all responses in natural language with no special data wrapping. Give detailed responses.
+        You are the assistant inside Mygra, a migraine journal. You answer questions about the person's own logged entries, and nothing else.
+        Everything you know comes from two tools: findMigraines (look up entries by date, pain level, trigger, or medication) and summarizePeriod (counts and averages). Call a tool before you state any date, count, average, or trigger. If a tool returns nothing, say there are no matching entries. Never guess or invent entries.
+        Describe patterns in the log in neutral language. Say "your log shows" rather than claiming a cause. Never diagnose, never predict whether a migraine will happen, and never recommend, name, or dose a medication or treatment. If asked for medical advice, say you can only describe the log and suggest asking a clinician.
+        Keep answers short: a few sentences. Reply in the language the person writes in.
+        Today is \(dayString(now, calendar: calendar)).
         """
-        if !userSummary.isEmpty { instructions += "\nUser profile: \(userSummary)" }
-        if !historySummary.isEmpty { instructions += "\nMigraine history summary: \(historySummary)" }
+        if !userSummary.isEmpty { instructions += "\nProfile: \(userSummary)" }
+        if !historySummary.isEmpty { instructions += "\nHistory overview: \(historySummary)" }
         return instructions
+    }
+
+    static func dayString(_ date: Date, calendar: Calendar) -> String {
+        var style = Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day()
+        style.timeZone = calendar.timeZone
+        return date.formatted(style)
     }
 
     public static func chatGreeting(entryCount: Int) -> String {
@@ -173,8 +262,8 @@ public enum IntelligencePrompts {
 
     public static func analysisPrompt(migraine: Migraine, user: User?) -> String {
         var lines: [String] = []
-        lines.append("Task: Provide a concise analysis of likely contributing factors for this single migraine event. Then include up to two non-clinical mitigation ideas tied to those factors. Do NOT provide medical diagnoses, prescriptions, or treatment plans.")
-        lines.append("Avoid medical advice/diagnoses. Use conditional, non-prescriptive language. 2–4 sentences max.")
+        lines.append("Task: Summarize what this single migraine entry records, including any logged figures that stood out. Describe only; do not state causes, give advice, or suggest treatment.")
+        lines.append("2–4 sentences max.")
         if let name = user?.name, !name.isEmpty {
             lines.append("User: \(name)")
         }
@@ -207,13 +296,13 @@ public enum IntelligencePrompts {
         if let note = migraine.note, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             lines.append("Note: \(note)")
         }
-        lines.append("Output: A short summary of likely contributing factors plus up to two non-clinical mitigation ideas linked to those factors. End with: This is general, non-medical guidance and not a diagnosis.")
+        lines.append("Output: A short descriptive summary of the entry. End with: \(analysisDisclaimer)")
         return lines.joined(separator: "\n")
     }
 
     public static func explanationPrompt(insight: Insight, user: User?) -> String {
         var lines: [String] = []
-        lines.append("Task: Explain this insight in everyday terms and provide one non-medical recommendation.")
+        lines.append("Task: Explain what this insight shows in everyday terms, then name one thing the person could look at in their own log next. Describe only; no advice or treatment.")
         if let name = user?.name, !name.isEmpty {
             lines.append("User: \(name)")
         }
@@ -227,7 +316,6 @@ public enum IntelligencePrompts {
             lines.append("Tags: \(tags)")
         }
         lines.append("Priority: \(insight.priority.rawValue)")
-        lines.append("Output: JSON with keys {description, recommendation} only.")
         return lines.joined(separator: "\n")
     }
 
