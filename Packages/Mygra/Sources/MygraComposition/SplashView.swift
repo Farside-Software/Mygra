@@ -47,7 +47,7 @@ struct SplashView: View {
             }
             .ignoresSafeArea()
         }
-        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { probe = $0 }
+        .containerLayoutProbe { probe = $0 }
         .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.trailing } action: { trailingInset = $0 }
         .onAppear(perform: runEntrance)
     }

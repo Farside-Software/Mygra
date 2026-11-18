@@ -87,7 +87,7 @@ struct ModifyMigraineSheetView: View {
         }
         .presentationDetents([.large])
         .interactiveDismissDisabled()
-        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
+        .containerLayoutProbe { layout = $0 }
     }
 
     private var isWide: Bool {

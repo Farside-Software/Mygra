@@ -89,6 +89,20 @@ nonisolated public struct LayoutProbe: Equatable, Sendable {
     }
 }
 
+extension View {
+    /// Reports the layout probe of the space this view is given, measured on a background
+    /// rather than on the view itself. A background is proposed exactly the view's size and
+    /// contributes nothing to it, so what the view switches between (toolbar items, nested
+    /// navigation, inline search, one pane or two) cannot feed back into the measurement.
+    /// Use it on adaptive containers whose content depends on the probe.
+    public func containerLayoutProbe(_ update: @escaping (LayoutProbe) -> Void) -> some View {
+        background {
+            Color.clear
+                .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { update($0) }
+        }
+    }
+}
+
 // MARK: - iPhone Duo detection
 
 #if os(iOS) && !targetEnvironment(macCatalyst)

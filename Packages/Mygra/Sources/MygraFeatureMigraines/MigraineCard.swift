@@ -83,16 +83,58 @@ enum MigraineLayout {
     static let singleColumnMaxWidth: CGFloat = 760
     static let wideMaxWidth: CGFloat = 1200
 
-    /// Two panes: the unfolded Duo (any window the fold divides, once it is wide enough to
-    /// hold two phone-width columns) or a regular-width iPad window.
-    static func isWide(_ probe: LayoutProbe, isRegularWidth: Bool) -> Bool {
-        if probe.hasFold { return probe.width >= 600 }
-        return isRegularWidth && probe.width >= 700
+    /// Two panes: the unfolded Duo (once the window is wide enough to hold two phone-width
+    /// columns) or a regular-width iPad window.
+    ///
+    /// The decision uses only what cannot change when the content switches between one and
+    /// two panes: the container's width, whether the device is a Duo (a constant), and the
+    /// size class. It deliberately ignores safe-area insets and reserved regions, which the
+    /// switch itself (toolbar items, nested navigation, inline search) can alter. A hysteresis
+    /// band around the threshold keeps a width that hovers near it from flipping the layout.
+    static func isWide(width: CGFloat, isDuo: Bool, isRegularWidth: Bool, wasWide: Bool) -> Bool {
+        guard isDuo || isRegularWidth else { return false }
+        let threshold: CGFloat = isDuo ? 600 : 700
+        return width >= (wasWide ? threshold - 40 : threshold)
+    }
+
+    static func isWide(_ probe: LayoutProbe, isRegularWidth: Bool, wasWide: Bool = false) -> Bool {
+        isWide(width: probe.width, isDuo: PhoneDuo.isDuo || probe.hasFold, isRegularWidth: isRegularWidth, wasWide: wasWide)
     }
 
     /// The gap between two panes; wider while a fold is active so the hinge sits in it.
     static func columnGap(_ probe: LayoutProbe) -> CGFloat {
         probe.isFoldActive ? Brand.Space.xxl * 2 : Brand.Space.xl
+    }
+}
+
+/// Three fixed regions side by side: leading pane, separator, trailing pane. The layout always
+/// reports exactly the size it is proposed and gives each child an exact frame, so what the
+/// panes contain can never change the container's own size (which the adaptive layout measures:
+/// a flexible stack let the panes' content nudge the width by fractions of a point, which moved
+/// the pane widths, which moved the content, without end).
+struct MigraineSplitLayout: Layout {
+    /// Width of the leading pane (integral, from the container's width or the fold).
+    var leadingWidth: CGFloat
+    /// Width of the separator between the panes (the hinge gap, or a hairline).
+    var separatorWidth: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        CGSize(width: proposal.width ?? 800, height: proposal.height ?? 600)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 3 else { return }
+        let leading = min(leadingWidth.rounded(), bounds.width)
+        let separator = min(separatorWidth, max(bounds.width - leading, 0))
+        let trailing = max(bounds.width - leading - separator, 0)
+        let frames = [
+            CGRect(x: bounds.minX, y: bounds.minY, width: leading, height: bounds.height),
+            CGRect(x: bounds.minX + leading, y: bounds.minY, width: separator, height: bounds.height),
+            CGRect(x: bounds.minX + leading + separator, y: bounds.minY, width: trailing, height: bounds.height)
+        ]
+        for (subview, frame) in zip(subviews, frames) {
+            subview.place(at: frame.origin, anchor: .topLeading, proposal: ProposedViewSize(width: frame.width, height: frame.height))
+        }
     }
 }
 

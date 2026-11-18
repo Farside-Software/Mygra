@@ -22,6 +22,9 @@ public struct MigraineListView: View {
     @State private var showingFilterSheet = false
     @State private var searchText = ""
     @State private var layout = LayoutProbe()
+    /// Latched from the container's width (see `MigraineLayout.isWide`), never recomputed
+    /// from the content that it switches.
+    @State private var isWide = false
     /// The migraine shown in the trailing pane while the list is wide.
     @State private var selectedID: UUID?
 
@@ -53,8 +56,9 @@ public struct MigraineListView: View {
     }
 
     /// Wide windows (the unfolded Duo, iPad) split into the list and the selected migraine.
-    private var isWide: Bool {
-        MigraineLayout.isWide(layout, isRegularWidth: horizontalSizeClass == .regular)
+    private func updateWide(_ probe: LayoutProbe) {
+        let wide = MigraineLayout.isWide(probe, isRegularWidth: horizontalSizeClass == .regular, wasWide: isWide)
+        if wide != isWide { isWide = wide }
     }
 
     /// The Duo (folded or not) and wide windows keep search as a field at the top of the list
@@ -69,7 +73,10 @@ public struct MigraineListView: View {
                 listColumn
             }
         }
-        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
+        .containerLayoutProbe { probe in
+            if layout != probe { layout = probe }
+            updateWide(probe)
+        }
         .onChange(of: isWide, initial: true) { _, wide in
             if wide, selectedID == nil { selectedID = visible.first?.id }
         }
@@ -205,16 +212,15 @@ public struct MigraineListView: View {
     private var splitContent: some View {
         let gap = MigraineLayout.columnGap(layout)
         let listWidth: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? min(max(layout.width * 0.42, 340), 440)
-        return HStack(spacing: 0) {
+        let separator: CGFloat = layout.hasFold ? gap : 1
+        return MigraineSplitLayout(leadingWidth: listWidth, separatorWidth: separator) {
             listColumn
-                .frame(width: listWidth)
             if layout.hasFold {
-                Color.clear.frame(width: gap)
+                Color.clear
             } else {
                 Divider()
             }
             detailPane
-                .frame(maxWidth: .infinity)
         }
     }
 

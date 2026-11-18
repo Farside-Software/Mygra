@@ -72,7 +72,7 @@ public struct MigraineCalendarView: View {
                 }
             }
         }
-        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
+        .containerLayoutProbe { layout = $0 }
         .navigationTitle("Calendar")
         .navigationSubtitleIfAvailable(monthSubtitle)
         .toolbar {

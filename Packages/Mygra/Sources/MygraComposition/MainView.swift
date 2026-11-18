@@ -416,7 +416,7 @@ private struct DuoStatusStrip: View {
                         .padding(.horizontal, Brand.Space.sm)
                 }
             }
-            .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
+            .containerLayoutProbe { layout = $0 }
     }
 }
 

@@ -63,7 +63,7 @@ public struct MigraineEntryView: View {
             }
         }
         .presentationSizing(.page)
-        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
+        .containerLayoutProbe { layout = $0 }
         .task {
             viewModel.resetGreeting()
             if viewModel.endDate < viewModel.startDate { viewModel.endDate = viewModel.startDate }

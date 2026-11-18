@@ -71,7 +71,7 @@ public struct AttackModeView: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
-        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
+        .containerLayoutProbe { layout = $0 }
         .preferredColorScheme(.dark)
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)

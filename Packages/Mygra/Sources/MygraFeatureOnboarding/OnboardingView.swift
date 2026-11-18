@@ -63,7 +63,7 @@ public struct OnboardingView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
         }
-        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { probe = $0 }
+        .containerLayoutProbe { probe = $0 }
         .onChange(of: step) { _, _ in
             // Resign the keyboard when the page changes.
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
