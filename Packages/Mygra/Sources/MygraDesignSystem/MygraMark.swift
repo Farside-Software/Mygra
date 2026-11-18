@@ -63,7 +63,7 @@ public struct MygraMark: View {
 
 /// One of the eight halo segments: inner radius 172, outer 300, 38 degrees wide, one every
 /// 45 degrees, the first centred straight up. Centre (512, 400) on the 1024 grid.
-private struct HaloSegment: Shape {
+nonisolated private struct HaloSegment: Shape {
     let index: Int
 
     func path(in rect: CGRect) -> Path {
@@ -87,7 +87,7 @@ private struct HaloSegment: Shape {
 }
 
 /// A half-disc of radius 280 on a short, softly rounded base: 560 wide, bottom edge at y 870.
-private struct ShouldersShape: Shape {
+nonisolated private struct ShouldersShape: Shape {
     func path(in rect: CGRect) -> Path {
         let side = min(rect.width, rect.height)
         let k = side / 1024
