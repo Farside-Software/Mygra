@@ -107,7 +107,8 @@ struct StartAttackIntent: AppIntent {
 
 // MARK: - Start tracking an ongoing migraine (background)
 
-struct StartMigraineIntent: AppIntent {
+struct StartMigraineIntent: LiveActivityIntent {
+    // LiveActivityIntent (not plain AppIntent) so the Live Activity can start from Siri in the background.
     static let title: LocalizedStringResource = "Start Tracking a Migraine"
     static let description = IntentDescription("Immediately starts tracking an ongoing migraine without opening the app.")
 
@@ -129,6 +130,7 @@ struct StartMigraineIntent: AppIntent {
         guard id != nil else {
             return .result(dialog: "You already have a migraine in progress.")
         }
+        session.statusSync.syncNow()
         return .result(dialog: "Started tracking your migraine. Feel better soon.")
     }
 }
@@ -144,6 +146,7 @@ struct EndMigraineIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         if try session.endOngoingMigraine() {
+            session.statusSync.syncNow()
             if #available(iOS 26.0, *) { MigraineSummarySnippetIntent.reload() }
             return .result(dialog: "Marked your migraine as ended.")
         }

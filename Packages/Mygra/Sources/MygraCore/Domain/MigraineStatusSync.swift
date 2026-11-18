@@ -26,6 +26,9 @@ public final class MigraineStatusSync {
     /// The status last written to the App Group.
     public private(set) var lastStatus: SharedMigraineStatus
 
+    /// Past this age an ongoing migraine no longer gets its Live Activity restarted.
+    nonisolated static let maxReassertAge: TimeInterval = 72 * 3600
+
     private var observationTask: Task<Void, Never>?
 
     public init(
@@ -95,6 +98,9 @@ public final class MigraineStatusSync {
         let current = Self.status(for: migraines)
 
         reconcileLiveActivity(with: ongoing)
+        // Sweep anything the in-memory bookkeeping cannot know about: an activity left
+        // over from a previous launch whose migraine has since ended.
+        (liveActivity as? any MigraineActivityReconciling)?.endAll(except: ongoing?.id)
 
         let previous = lastStatus
         let changedLastStart: Bool = {
@@ -126,7 +132,12 @@ public final class MigraineStatusSync {
     /// made while the app is in the background (a watch start can arrive that way), so the
     /// app calls this when it becomes active. Idempotent.
     public func reassertLiveActivity() {
-        guard let liveActivity, let migraines = try? loadMigraines(), let ongoing = migraines.first(where: \.isOngoing) else { return }
+        guard let liveActivity, let migraines = try? loadMigraines() else { return }
+        let ongoing = migraines.first(where: \.isOngoing)
+        (liveActivity as? any MigraineActivityReconciling)?.endAll(except: ongoing?.id)
+        // A migraine left open for days is almost certainly forgotten: do not keep
+        // putting a Live Activity back on the Lock Screen for it.
+        guard let ongoing, Date().timeIntervalSince(ongoing.startDate) < Self.maxReassertAge else { return }
         liveActivity.ensureStarted(
             for: ongoing.id,
             startDate: ongoing.startDate,
