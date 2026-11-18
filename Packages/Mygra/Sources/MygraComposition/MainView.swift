@@ -66,6 +66,7 @@ struct MainView: View {
                         .newMigraineToolbarIfNeeded(self)
                         .navigationDestination(for: UUID.self, destination: migraineDestination)
                 }
+                .duoStripClearance(isEnabled: showsStatusStrip)
             }
 
             Tab(AppTab.calendar.title, systemImage: AppTab.calendar.systemImage, value: .calendar) {
@@ -74,6 +75,7 @@ struct MainView: View {
                         .newMigraineToolbarIfNeeded(self)
                         .navigationDestination(for: UUID.self, destination: migraineDestination)
                 }
+                .duoStripClearance(isEnabled: showsStatusStrip)
             }
 
             Tab(AppTab.list.title, systemImage: AppTab.list.systemImage, value: .list) {
@@ -83,6 +85,7 @@ struct MainView: View {
                         .newMigraineToolbarIfNeeded(self)
                         .navigationDestination(for: UUID.self, destination: migraineDestination)
                 }
+                .duoStripClearance(isEnabled: showsStatusStrip)
             }
 
             Tab(AppTab.settings.title, systemImage: AppTab.settings.systemImage, value: .settings) {
@@ -384,6 +387,9 @@ private struct MigraineStatusAccessory: View {
 
 // MARK: - Duo status strip
 
+/// The height of the status strip on the iPhone Duo.
+private let duoStripHeight: CGFloat = 52
+
 /// The status accessory on the iPhone Duo, where the tab bar is a vertical strip on the
 /// trailing edge. It is an ordinary bottom inset (which already stops short of that strip),
 /// and when the device is open it stays inside the leading pane so nothing sits on the hinge.
@@ -397,7 +403,7 @@ private struct DuoStatusStrip: View {
 
     var body: some View {
         Color.clear
-            .frame(height: 52)
+            .frame(height: duoStripHeight)
             .overlay {
                 // One capsule: the tinted glass is the control's only edge (the accessory draws
                 // no fill of its own here).
@@ -417,6 +423,24 @@ private struct DuoStatusStrip: View {
                 }
             }
             .containerLayoutProbe { layout = $0 }
+    }
+}
+
+// MARK: - Strip clearance
+
+private extension View {
+    /// Keeps the Duo's status strip from covering the end of a tab's scrolling content: the
+    /// strip floats over the page, and the system does not inset tab content for it, so the
+    /// page reserves the strip's height as a bottom safe-area inset.
+    @ViewBuilder
+    func duoStripClearance(isEnabled: Bool) -> some View {
+        if PhoneDuo.isDuo, isEnabled {
+            safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: duoStripHeight + Brand.Space.sm)
+            }
+        } else {
+            self
+        }
     }
 }
 

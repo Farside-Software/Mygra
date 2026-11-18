@@ -72,11 +72,11 @@ struct MonthGlanceCard: View {
                 Divider()
 
                 Grid(alignment: .leading, horizontalSpacing: Brand.Space.lg, verticalSpacing: Brand.Space.md) {
-                    GridRow {
+                    GridRow(alignment: .top) {
                         stat(String(localized: "Days with a migraine"), "\(summary.thisMonth.daysWithMigraine)", last: "\(summary.lastMonth.daysWithMigraine)")
                         stat(String(localized: "Average peak pain"), pain(summary.thisMonth.averagePeakPain) ?? "–", last: nil)
                     }
-                    GridRow {
+                    GridRow(alignment: .top) {
                         stat(String(localized: "Average length"), hours(summary.thisMonth.averageDurationHours) ?? "–", last: nil)
                         stat(String(localized: "Longest"), hours(summary.thisMonth.longestDurationHours) ?? "–", last: nil)
                     }
