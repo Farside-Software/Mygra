@@ -354,6 +354,10 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
 
     /// Aggregates samples within the window into one `HealthData` snapshot.
     public func fetchSnapshot(from start: Date, to end: Date) async throws -> HealthData {
+        #if DEBUG
+        // `-MygraDebugHealth connected`: every window read (entry sheet, edits, refreshes) gets the canned data.
+        if let debugData { return debugData }
+        #endif
         try await ensureAuthorized()
 
         async let waterML = queryClient.sumQuantity(qtWater, unit: unitMilliliter, from: start, to: end)
