@@ -17,11 +17,13 @@ public struct MigraineEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(HealthManager.self) private var healthManager
     @Environment(WeatherManager.self) private var weatherManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage(AppStorageKeys.useMetricUnits) private var useMetricUnits: Bool = false
 
     let onMigraineSaved: (Migraine) -> Void
 
     @State private var viewModel = ViewModel()
+    @State private var layout = LayoutProbe()
 
     public init(onMigraineSaved: @escaping (Migraine) -> Void) {
         self.onMigraineSaved = onMigraineSaved
@@ -29,103 +31,7 @@ public struct MigraineEntryView: View {
 
     public var body: some View {
         NavigationStack {
-            Form {
-                Text(viewModel.greeting.isEmpty ? "We've got you." : viewModel.greeting)
-                    .font(.system(.title3, design: .rounded, weight: .medium))
-                    .italic()
-                    .foregroundStyle(LinearGradient.mygraHorizontal)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
-
-                Section {
-                    DurationSection(
-                        startTitle: "Started",
-                        startDate: $viewModel.startDate,
-                        isOngoing: $viewModel.isOngoing,
-                        endDate: $viewModel.endDate,
-                        showLiveActivityNote: true
-                    )
-                } header: {
-                    Label("Duration", systemImage: "clock")
-                }
-
-                Section {
-                    healthCapsule
-                    if let health = healthManager.latestData, viewModel.healthError == nil {
-                        IntakeSection(
-                            baseHealth: health,
-                            isEditing: $viewModel.isEditingIntake,
-                            additions: $viewModel.additions,
-                            onConfirmAdd: {
-                                Haptics.success()
-                                withAnimation { viewModel.isEditingIntake = false }
-                            },
-                            onCancel: { viewModel.clearStagedIntake() }
-                        )
-                    }
-                    weatherCapsule
-                    if viewModel.didPullWeather, let reading = weatherManager.reading {
-                        weatherSummary(reading)
-                    }
-                } header: {
-                    Label("Context", systemImage: "heart.text.square")
-                } footer: {
-                    Text("Health and weather for this time window are attached to the record automatically.")
-                }
-
-                Section {
-                    LevelSlider.pain(level: $viewModel.painLevel)
-                    LevelSlider.stress(level: $viewModel.stressLevel)
-                    Toggle(isOn: $viewModel.pinned) {
-                        Label("Pin this migraine", systemImage: "pin")
-                    }
-                    .tint(.yellow)
-                    .onChange(of: viewModel.pinned) { _, _ in Haptics.lightImpact() }
-                } header: {
-                    Label("Experience", systemImage: "bolt.heart")
-                }
-
-                Section {
-                    SearchField("Search triggers", text: $viewModel.triggerSearchText)
-                    TriggerPickerSection(selection: $viewModel.selectedTriggers, searchText: viewModel.triggerSearchText)
-                    customTriggerEditor
-                    if viewModel.selectedTriggerCount == 0 {
-                        Text("No triggers selected").foregroundStyle(.secondary)
-                    } else {
-                        Text("\(viewModel.selectedTriggerCount) selected")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .contentTransition(.numericText())
-                    }
-                } header: {
-                    Label("Possible Triggers", systemImage: "exclamationmark.triangle")
-                }
-
-                Section {
-                    TextEditor(text: $viewModel.foodsText)
-                        .frame(minHeight: 80)
-                        .overlay(alignment: .topLeading) {
-                            if viewModel.foodsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                placeholder("List foods eaten around this time (comma or newline separated)")
-                            }
-                        }
-                } header: {
-                    Label("Food Sensitivities", systemImage: "fork.knife")
-                }
-
-                Section {
-                    TextEditor(text: $viewModel.noteText)
-                        .frame(minHeight: 120)
-                        .overlay(alignment: .topLeading) {
-                            if viewModel.noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                placeholder("Add any details you want to remember")
-                            }
-                        }
-                } header: {
-                    Label("Notes", systemImage: "note.text")
-                }
-            }
-            .formStyle(.grouped)
+            formPanes
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle("New Migraine")
             .navigationBarTitleDisplayMode(.inline)
@@ -157,6 +63,7 @@ public struct MigraineEntryView: View {
             }
         }
         .presentationSizing(.page)
+        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
         .task {
             viewModel.resetGreeting()
             if viewModel.endDate < viewModel.startDate { viewModel.endDate = viewModel.startDate }
@@ -177,6 +84,142 @@ public struct MigraineEntryView: View {
         .onChange(of: viewModel.isOngoing) { _, _ in Task { await refreshRetrieval() } }
         .onChange(of: viewModel.endDate) { _, _ in
             if !viewModel.isOngoing { Task { await refreshRetrieval() } }
+        }
+    }
+
+    // MARK: - Layout
+
+    private var isWide: Bool {
+        MigraineLayout.isWide(layout, isRegularWidth: horizontalSizeClass == .regular)
+    }
+
+    /// One form on the phone and the folded Duo. On the unfolded Duo and on iPad the sheet is
+    /// as wide as two phones, so it splits into two independent forms around the hinge:
+    /// when and how it felt on the left, what surrounded it on the right.
+    @ViewBuilder
+    private var formPanes: some View {
+        if isWide {
+            HStack(alignment: .top, spacing: MigraineLayout.columnGap(layout) - Brand.Space.xxl) {
+                Form {
+                    greetingRow
+                    whenSections
+                }
+                .formStyle(.grouped)
+                Form {
+                    surroundingsSections
+                }
+                .formStyle(.grouped)
+            }
+        } else {
+            Form {
+                greetingRow
+                whenSections
+                surroundingsSections
+            }
+            .formStyle(.grouped)
+        }
+    }
+
+    private var greetingRow: some View {
+        Text(viewModel.greeting.isEmpty ? "We've got you." : viewModel.greeting)
+                    .font(.system(.title3, design: .rounded, weight: .medium))
+                    .italic()
+                    .foregroundStyle(LinearGradient.mygraHorizontal)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private var whenSections: some View {
+        Section {
+            DurationSection(
+                startTitle: "Started",
+                startDate: $viewModel.startDate,
+                isOngoing: $viewModel.isOngoing,
+                endDate: $viewModel.endDate,
+                showLiveActivityNote: true
+            )
+        } header: {
+            Label("Duration", systemImage: "clock")
+        }
+
+        Section {
+            healthCapsule
+            if let health = healthManager.latestData, viewModel.healthError == nil {
+                IntakeSection(
+                    baseHealth: health,
+                    isEditing: $viewModel.isEditingIntake,
+                    additions: $viewModel.additions,
+                    onConfirmAdd: {
+                        Haptics.success()
+                        withAnimation { viewModel.isEditingIntake = false }
+                    },
+                    onCancel: { viewModel.clearStagedIntake() }
+                )
+            }
+            weatherCapsule
+            if viewModel.didPullWeather, let reading = weatherManager.reading {
+                weatherSummary(reading)
+            }
+        } header: {
+            Label("Context", systemImage: "heart.text.square")
+        } footer: {
+            Text("Health and weather for this time window are attached to the record automatically.")
+        }
+
+        Section {
+            LevelSlider.pain(level: $viewModel.painLevel)
+            LevelSlider.stress(level: $viewModel.stressLevel)
+            Toggle(isOn: $viewModel.pinned) {
+                Label("Pin this migraine", systemImage: "pin")
+            }
+            .tint(.yellow)
+            .onChange(of: viewModel.pinned) { _, _ in Haptics.lightImpact() }
+        } header: {
+            Label("Experience", systemImage: "bolt.heart")
+        }
+    }
+
+    @ViewBuilder
+    private var surroundingsSections: some View {
+        Section {
+            SearchField("Search triggers", text: $viewModel.triggerSearchText)
+            TriggerPickerSection(selection: $viewModel.selectedTriggers, searchText: viewModel.triggerSearchText)
+            customTriggerEditor
+            if viewModel.selectedTriggerCount == 0 {
+                Text("No triggers selected").foregroundStyle(.secondary)
+            } else {
+                Text("\(viewModel.selectedTriggerCount) selected")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
+            }
+        } header: {
+            Label("Possible Triggers", systemImage: "exclamationmark.triangle")
+        }
+
+        Section {
+            TextEditor(text: $viewModel.foodsText)
+                .frame(minHeight: 80)
+                .overlay(alignment: .topLeading) {
+                    if viewModel.foodsText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        placeholder("List foods eaten around this time (comma or newline separated)")
+                    }
+                }
+        } header: {
+            Label("Food Sensitivities", systemImage: "fork.knife")
+        }
+
+        Section {
+            TextEditor(text: $viewModel.noteText)
+                .frame(minHeight: 120)
+                .overlay(alignment: .topLeading) {
+                    if viewModel.noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        placeholder("Add any details you want to remember")
+                    }
+                }
+        } header: {
+            Label("Notes", systemImage: "note.text")
         }
     }
 

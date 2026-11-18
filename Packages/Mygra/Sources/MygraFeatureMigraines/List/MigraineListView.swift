@@ -17,8 +17,13 @@ public struct MigraineListView: View {
     @Environment(MigraineDataModel.self) private var migraineData
     @AppStorage(AppStorageKeys.useDayMonthYearDates) private var useDayMonthYearDates: Bool = false
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     @State private var showingFilterSheet = false
     @State private var searchText = ""
+    @State private var layout = LayoutProbe()
+    /// The migraine shown in the trailing pane while the list is wide.
+    @State private var selectedID: UUID?
 
     public init() {}
 
@@ -47,38 +52,43 @@ public struct MigraineListView: View {
         Dictionary(unpinned.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
+    /// Wide windows (the unfolded Duo, iPad) split into the list and the selected migraine.
+    private var isWide: Bool {
+        MigraineLayout.isWide(layout, isRegularWidth: horizontalSizeClass == .regular)
+    }
+
+    /// The Duo (folded or not) and wide windows keep search as a field at the top of the list
+    /// itself: always visible, never minimized into the toolbar, and clear of the hinge.
+    private var usesInlineSearch: Bool { PhoneDuo.isDuo || isWide }
+
     public var body: some View {
         Group {
-            if visible.isEmpty {
-                if searchFilter.isActive {
-                    filteredEmptyState
-                } else {
-                    emptyState
-                }
+            if isWide {
+                splitContent
             } else {
-                list
+                listColumn
             }
         }
-        .searchable(text: $searchText, prompt: Text("Search notes, triggers, and insights"))
-        .minimizingSearchIfAvailable()
+        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
+        .onChange(of: isWide, initial: true) { _, wide in
+            if wide, selectedID == nil { selectedID = visible.first?.id }
+        }
+        .onChange(of: visible.map(\.id)) { _, ids in
+            guard isWide else { return }
+            if let selectedID, ids.contains(selectedID) { return }
+            selectedID = ids.first
+        }
         .navigationSubtitleIfAvailable(subtitle)
         .toolbar {
-            ToolbarItem(placement: .secondaryAction) {
-                Button {
-                    Haptics.lightImpact()
-                    showingFilterSheet = true
-                } label: {
-                    Label("Filter", systemImage: filter.hasCriteria ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                        .symbolRenderingMode(filter.hasCriteria ? .multicolor : .monochrome)
+            // Wide windows put filtering next to the search field, so the page has one menu
+            // (the detail pane's) instead of two ellipses side by side.
+            if !isWide {
+                ToolbarItem(placement: .secondaryAction) {
+                    filterButton
                 }
-                .accessibilityIdentifier("filterButton")
-                .accessibilityValue(filter.hasCriteria ? Text("Active") : Text("Off"))
-            }
-            ToolbarItem(placement: .secondaryAction) {
-                Toggle(isOn: pinnedOnlyBinding) {
-                    Label("Pinned Only", systemImage: filter.pinnedOnly ? "pin.fill" : "pin")
+                ToolbarItem(placement: .secondaryAction) {
+                    pinnedOnlyToggle
                 }
-                .accessibilityIdentifier("pinnedOnlyToggle")
             }
         }
         .sheet(isPresented: $showingFilterSheet) {
@@ -120,6 +130,110 @@ public struct MigraineListView: View {
         )
     }
 
+    // MARK: - Columns
+
+    private var listColumn: some View {
+        VStack(spacing: 0) {
+            if usesInlineSearch {
+                inlineSearchField
+            }
+            Group {
+                if visible.isEmpty {
+                    if searchFilter.isActive {
+                        filteredEmptyState
+                    } else {
+                        emptyState
+                    }
+                } else {
+                    list
+                }
+            }
+        }
+        .modifier(SystemSearchModifier(isEnabled: !usesInlineSearch, text: $searchText))
+    }
+
+    private var inlineSearchField: some View {
+        HStack(spacing: Brand.Space.sm) {
+            HStack(spacing: Brand.Space.sm) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                SearchField("Search notes, triggers, and insights", text: $searchText)
+            }
+            .padding(.horizontal, Brand.Space.md)
+            .padding(.vertical, Brand.Space.sm + 2)
+            .background(.thinMaterial, in: Capsule(style: .continuous))
+            .accessibilityIdentifier("migraineSearchField")
+
+            if isWide {
+                Menu {
+                    filterButton
+                    pinnedOnlyToggle
+                } label: {
+                    Label("Filter", systemImage: filter.hasCriteria ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        .labelStyle(.iconOnly)
+                        .font(.title3)
+                }
+                .accessibilityIdentifier("filterMenu")
+            }
+        }
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.bottom, Brand.Space.sm)
+    }
+
+    private var filterButton: some View {
+        Button {
+            Haptics.lightImpact()
+            showingFilterSheet = true
+        } label: {
+            Label("Filter", systemImage: filter.hasCriteria ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                .symbolRenderingMode(filter.hasCriteria ? .multicolor : .monochrome)
+        }
+        .accessibilityIdentifier("filterButton")
+        .accessibilityValue(filter.hasCriteria ? Text("Active") : Text("Off"))
+    }
+
+    private var pinnedOnlyToggle: some View {
+        Toggle(isOn: pinnedOnlyBinding) {
+            Label("Pinned Only", systemImage: filter.pinnedOnly ? "pin.fill" : "pin")
+        }
+        .accessibilityIdentifier("pinnedOnlyToggle")
+    }
+
+    /// List and detail side by side. With a hardware fold the list takes everything left of
+    /// the hinge and the detail everything right of it; the gap between them is the hinge.
+    private var splitContent: some View {
+        let gap = MigraineLayout.columnGap(layout)
+        let listWidth: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? min(max(layout.width * 0.42, 340), 440)
+        return HStack(spacing: 0) {
+            listColumn
+                .frame(width: listWidth)
+            if layout.hasFold {
+                Color.clear.frame(width: gap)
+            } else {
+                Divider()
+            }
+            detailPane
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    @ViewBuilder
+    private var detailPane: some View {
+        if let selectedID, let migraine = migraineData.migraine(withID: selectedID) {
+            NavigationStack {
+                MigraineDetailView(migraine: migraine, onClose: { self.selectedID = visible.first(where: { $0.id != selectedID })?.id })
+            }
+            .id(selectedID)
+        } else {
+            ContentUnavailableView {
+                Label("Select a Migraine", systemImage: "list.bullet.rectangle")
+            } description: {
+                Text("Choose a migraine on the left to see its details.")
+            }
+        }
+    }
+
     // MARK: - List
 
     private var list: some View {
@@ -158,10 +272,34 @@ public struct MigraineListView: View {
         .animation(.snappy, value: visible.map(\.id))
     }
 
-    private func row(_ migraine: Migraine) -> some View {
-        NavigationLink(value: migraine.id) {
-            MigraineRowView(migraine: migraine)
+    @ViewBuilder
+    private func rowLink(_ migraine: Migraine) -> some View {
+        if isWide {
+            Button {
+                Haptics.lightImpact()
+                selectedID = migraine.id
+            } label: {
+                HStack(spacing: Brand.Space.sm) {
+                    MigraineRowView(migraine: migraine)
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                        .accessibilityHidden(true)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(selectedID == migraine.id ? Color.mygraBlue.opacity(0.16) : nil)
+            .accessibilityAddTraits(selectedID == migraine.id ? .isSelected : [])
+        } else {
+            NavigationLink(value: migraine.id) {
+                MigraineRowView(migraine: migraine)
+            }
         }
+    }
+
+    private func row(_ migraine: Migraine) -> some View {
+        rowLink(migraine)
         .hoverHighlight()
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button {
@@ -311,6 +449,23 @@ public struct MigraineListView: View {
             Label(title, systemImage: "slider.horizontal.3")
         }
         .glassActionButton(prominent: false)
+    }
+}
+
+/// The system search field (minimizing into the toolbar on iOS 26) for the phone and iPad
+/// layouts that have no fold to work around.
+private struct SystemSearchModifier: ViewModifier {
+    let isEnabled: Bool
+    @Binding var text: String
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content
+                .searchable(text: $text, prompt: Text("Search notes, triggers, and insights"))
+                .minimizingSearchIfAvailable()
+        } else {
+            content
+        }
     }
 }
 

@@ -21,6 +21,7 @@ public struct MigraineCalendarView: View {
     @State private var selectedDate = Date()
     @State private var displayedMonth = Date()
     @State private var selectedTag: MigraineTag?
+    @State private var layout = LayoutProbe()
 
     private let calendar = Calendar.current
 
@@ -39,23 +40,39 @@ public struct MigraineCalendarView: View {
         filteredMigraines.filter { calendar.isDate($0.startDate, equalTo: displayedMonth, toGranularity: .month) }.count
     }
 
+    /// Month on one side and the selected day on the other: the unfolded Duo (split at the
+    /// hinge) and regular-width iPad windows.
+    private var isWide: Bool {
+        if layout.hasFold { return layout.width >= 600 }
+        return horizontalSizeClass == .regular && layout.width >= 700
+    }
+
     public var body: some View {
         Group {
-            if horizontalSizeClass == .regular {
+            if isWide {
+                let gap = layout.isFoldActive ? Brand.Space.xxl * 2 : Brand.Space.xl
+                // With a fold, the month takes the whole left screen and the day list the whole
+                // right one; the gap between them is the hinge. Without one, a fixed month width.
+                let monthWidth: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? min(520, layout.width * 0.55)
                 HStack(alignment: .top, spacing: 0) {
                     calendarPane
-                        .frame(maxWidth: 520)
-                    Divider()
+                        .frame(width: monthWidth)
+                    if layout.hasFold {
+                        Color.clear.frame(width: gap)
+                    } else {
+                        Divider()
+                    }
                     dayList
                 }
             } else {
                 VStack(spacing: 0) {
                     calendarPane
-                    Divider().padding(.top, Brand.Space.lg)
+                    Divider().padding(.top, Brand.Space.sm)
                     dayList
                 }
             }
         }
+        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
         .navigationTitle("Calendar")
         .navigationSubtitleIfAvailable(monthSubtitle)
         .toolbar {
@@ -97,7 +114,8 @@ public struct MigraineCalendarView: View {
                 displayedMonth: displayedMonth,
                 selectedDate: $selectedDate,
                 migraines: filteredMigraines,
-                isPeriodDay: cycleData.isActive ? { cycleData.isPeriodDay($0) } : nil
+                isPeriodDay: cycleData.isActive ? { cycleData.isPeriodDay($0) } : nil,
+                cellHeight: PhoneDuo.isDuo && !isWide ? 40 : 44
             )
                 .padding(.horizontal)
                 .id(calendar.dateInterval(of: .month, for: displayedMonth)?.start ?? displayedMonth)

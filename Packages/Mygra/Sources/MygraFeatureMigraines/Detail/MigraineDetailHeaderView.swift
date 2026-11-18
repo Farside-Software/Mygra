@@ -3,7 +3,7 @@
 //  MygraFeatureMigraines
 //
 //  The headline card: timing rows, pain and stress meters, and (while ongoing) the
-//  live elapsed time plus the single prominent End action.
+//  live elapsed time plus the page's one primary action, End Migraine.
 //
 
 #if os(iOS)
@@ -25,15 +25,16 @@ struct MigraineDetailHeaderView: View {
                 liveTimer
             }
 
+            // The live timer already says "ongoing", so an open migraine shows only its start.
             VStack(alignment: .leading, spacing: Brand.Space.sm) {
                 MetricRowView(String(localized: "Start"), value: startText)
-                MetricRowView(String(localized: "End"), value: endText)
                 if !migraine.isOngoing {
+                    MetricRowView(String(localized: "End"), value: endText)
                     MetricRowView(String(localized: "Duration"), value: durationText)
                 }
             }
-            .padding(Brand.Space.md)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: Brand.Radius.control, style: .continuous))
+
+            Divider()
 
             HStack(spacing: Brand.Space.md) {
                 StatMeter(
@@ -70,6 +71,7 @@ struct MigraineDetailHeaderView: View {
             }
         }
         .padding(Brand.Space.lg)
+        .frame(maxWidth: .infinity)
         .cardSurface()
         .accessibilityElement(children: .contain)
         .accessibilityLabel(migraine.isOngoing ? "Ongoing migraine" : "Migraine details")
@@ -119,9 +121,7 @@ private struct StatMeter: View {
                 .foregroundStyle(.secondary)
                 .contentTransition(.numericText())
         }
-        .padding(Brand.Space.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: Brand.Radius.control, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(title) \(display)"))
     }
