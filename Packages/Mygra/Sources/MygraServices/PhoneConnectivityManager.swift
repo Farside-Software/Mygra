@@ -73,9 +73,16 @@ public final class PhoneConnectivityManager: NSObject, WatchStatusPushing {
             Log.watch.error("Failed to update application context: \(error.localizedDescription)")
         }
         if session.isReachable {
-            session.sendMessage(payload, replyHandler: nil) { error in
-                Log.watch.error("Failed to send live message to watch: \(error.localizedDescription)")
-            }
+            Self.sendLiveMessage(payload, on: session)
+        }
+    }
+
+    /// WatchConnectivity calls the error handler on a background queue. A closure written
+    /// inside this main-actor class would be main-actor isolated and trap there, so it is
+    /// built in a nonisolated helper.
+    nonisolated private static func sendLiveMessage(_ payload: [String: Any], on session: WCSession) {
+        session.sendMessage(payload, replyHandler: nil) { error in
+            Log.watch.error("Failed to send live message to watch: \(error.localizedDescription)")
         }
     }
 

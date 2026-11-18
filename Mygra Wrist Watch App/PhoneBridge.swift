@@ -50,12 +50,17 @@ final class PhoneBridge: NSObject {
     /// Asks the phone for the current status (no-op when unreachable).
     func requestStatus() {
         guard WCSession.isSupported(), WCSession.default.isReachable else { return }
-        WCSession.default.sendMessage(WatchMessage(request: .status).payload) { reply in
+        Self.sendStatusRequest(WatchMessage(request: .status).payload)
+    }
+
+    /// WatchConnectivity calls reply handlers on a background queue. A closure written inside
+    /// this main-actor class would be main-actor isolated and trap there, so the handlers are
+    /// built in nonisolated helpers and hop to the main actor themselves.
+    nonisolated private static func sendStatusRequest(_ payload: [String: Any]) {
+        WCSession.default.sendMessage(payload, replyHandler: { reply in
             guard let status = SharedMigraineStatus(payload: reply) else { return }
-            Task { @MainActor in
-                PhoneBridge.shared.apply(status)
-            }
-        } errorHandler: { _ in }
+            Task { @MainActor in PhoneBridge.shared.apply(status) }
+        }, errorHandler: { _ in })
     }
 
     /// Ends the ongoing migraine on the phone.
@@ -110,12 +115,16 @@ final class PhoneBridge: NSObject {
         guard WCSession.isSupported(), WCSession.default.isReachable else {
             return WatchCommandReply(success: false)
         }
-        return await withCheckedContinuation { continuation in
-            WCSession.default.sendMessage(message.payload) { reply in
+        return await Self.sendCommand(message.payload)
+    }
+
+    nonisolated private static func sendCommand(_ payload: [String: Any]) async -> WatchCommandReply {
+        await withCheckedContinuation { continuation in
+            WCSession.default.sendMessage(payload, replyHandler: { reply in
                 continuation.resume(returning: WatchCommandReply(payload: reply))
-            } errorHandler: { _ in
+            }, errorHandler: { _ in
                 continuation.resume(returning: WatchCommandReply(success: false))
-            }
+            })
         }
     }
 
