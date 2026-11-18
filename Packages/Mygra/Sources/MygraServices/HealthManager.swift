@@ -219,7 +219,12 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
     }
 
     /// False on devices without Health data (some iPads, simulators).
-    public var isAvailable: Bool { type(of: store).isHealthDataAvailable() }
+    public var isAvailable: Bool {
+        #if DEBUG
+        if debugData != nil { return true }
+        #endif
+        return type(of: store).isHealthDataAvailable()
+    }
 
     public convenience init() {
         self.init(store: LiveHealthStore())
@@ -399,7 +404,7 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
     /// authorization prompt; without access it simply clears the snapshot.
     public func refreshLatest(from start: Date, to end: Date) async {
         #if DEBUG
-        if let debugData { isAuthorized = true; latestData = debugData; return }
+        if let debugData { isAuthorized = true; lastError = nil; latestData = debugData; return }
         #endif
         refreshAuthorizationStatus()
         guard isAuthorized else {
