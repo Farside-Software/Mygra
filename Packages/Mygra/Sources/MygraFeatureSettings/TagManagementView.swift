@@ -25,15 +25,7 @@ public struct TagManagementView: View {
                 ContentUnavailableView {
                     Label("No Tags", systemImage: "tag.slash")
                 } description: {
-                    Text("Create tags to categorize your migraines")
-                } actions: {
-                    Button {
-                        Haptics.lightImpact()
-                        showingAddSheet = true
-                    } label: {
-                        Label("Add Tag", systemImage: "plus")
-                    }
-                    .glassActionButton(tint: .mygraPurple)
+                    Text("Tap + to create a tag for your migraines.")
                 }
                 .listRowBackground(Color.clear)
             } else {

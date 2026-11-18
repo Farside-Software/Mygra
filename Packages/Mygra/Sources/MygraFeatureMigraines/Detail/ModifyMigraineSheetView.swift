@@ -67,6 +67,7 @@ struct ModifyMigraineSheetView: View {
         NavigationStack {
             formPanes
             .navigationTitle("Modify Migraine")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", systemImage: "xmark", role: .cancel) {

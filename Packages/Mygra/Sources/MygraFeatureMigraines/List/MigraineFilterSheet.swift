@@ -108,6 +108,7 @@ struct MigraineFilterSheet: View {
             }
         }
         .navigationTitle("Filter Migraines")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", systemImage: "xmark", role: .destructive) {

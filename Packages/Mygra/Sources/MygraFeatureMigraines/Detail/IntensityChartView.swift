@@ -48,7 +48,9 @@ struct IntensityChartView: View {
 
     /// One reading is not a trend; the header already shows the levels, so say only that.
     private func singleSampleView(_ sample: IntensitySample) -> some View {
-        Text("Only the starting reading is recorded so far. Update it as the migraine changes to see a trend.")
+        Text(onUpdateIntensity != nil
+             ? "Only the starting reading is recorded so far. Update it as the migraine changes to see a trend."
+             : "Only one reading was recorded, so there is no trend to show.")
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)

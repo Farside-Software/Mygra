@@ -257,7 +257,10 @@ public enum IntelligencePrompts {
     }
 
     public static func chatGreeting(entryCount: Int) -> String {
-        String(localized: "I’ve loaded your migraine history and profile, including your last \(entryCount) entries. I can analyze patterns and trends in your logs. What would you like to explore?")
+        if entryCount == 0 {
+            return String(localized: "You haven’t logged any migraines yet. Once you do, I can describe patterns in your logs. What would you like to know?")
+        }
+        return String(localized: "I’ve loaded your migraine history and profile, including your last \(entryCount) entries. I can analyze patterns and trends in your logs. What would you like to explore?")
     }
 
     public static func analysisPrompt(migraine: Migraine, user: User?) -> String {

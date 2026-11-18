@@ -106,6 +106,10 @@ public struct DashboardView: View {
             await refreshAll()
             await cycleData.refresh()
             migraineData.noteInsightsOpened()
+            #if DEBUG
+            // Screenshots: `-MygraDebugPresent assistant` opens the assistant.
+            if UserDefaults.standard.string(forKey: "MygraDebugPresent") == "assistant" { viewModel.isShowingAssistant = true }
+            #endif
         }
         .fullScreenCover(isPresented: $viewModel.isShowingAssistant) {
             MigraineAssistantView()
