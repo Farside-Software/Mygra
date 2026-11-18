@@ -127,7 +127,7 @@ struct LastThirtyDaysCard: View {
 
                 HStack(alignment: .top, spacing: Brand.Space.lg) {
                     footnote(String(localized: "Days with a migraine"), "\(summary.migraineDaysInLast30)")
-                    footnote(String(localized: "Longest stretch without"), String(localized: "\(summary.longestFreeStretchInLast30) days"))
+                    footnote(String(localized: "Longest clear stretch"), String(localized: "\(summary.longestFreeStretchInLast30) days"))
                 }
             }
         }
@@ -149,7 +149,7 @@ struct LastThirtyDaysCard: View {
 
     private func footnote(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(title).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             Text(value).font(.subheadline.weight(.semibold)).monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)

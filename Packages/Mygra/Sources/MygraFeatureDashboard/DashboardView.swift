@@ -69,21 +69,24 @@ public struct DashboardView: View {
                         VStack(spacing: Brand.Space.lg) {
                             MedicationOveruseCard()
                             statisticCards(summary, first: true)
-                            weatherCard
+                            if hasWeather { weatherCard }
                         }
                         VStack(spacing: Brand.Space.lg) {
                             statisticCards(summary, first: false)
                             todayCard
                             plusCards
+                            if !hasWeather { weatherCard }
                         }
                     }
                 } else {
                     MedicationOveruseCard()
                     statisticCards(summary, first: true)
                     statisticCards(summary, first: false)
-                    weatherCard
+                    if hasWeather { weatherCard }
                     todayCard
                     plusCards
+                    // Without a reading the card only explains why, so it follows the content.
+                    if !hasWeather { weatherCard }
                 }
 
                 Color.clear.frame(height: Brand.Space.md)
@@ -114,6 +117,8 @@ public struct DashboardView: View {
     }
 
     // MARK: - Cards
+
+    private var hasWeather: Bool { weatherManager.reading != nil }
 
     private var weatherCard: some View {
         WeatherCardView(

@@ -97,6 +97,15 @@ nonisolated public struct MedicationPreset: Identifiable, Hashable, Sendable {
         .init(name: "Dihydroergotamine", medicationClass: .ergot),
     ]
 
+    /// The preset whose name matches `spoken` (ignoring case), so a first-time dose of a
+    /// common medication still gets its real class.
+    public static func match(_ spoken: String) -> MedicationPreset? {
+        let needle = spoken.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !needle.isEmpty else { return nil }
+        return all.first { $0.name.lowercased() == needle }
+            ?? all.first { needle.contains($0.name.lowercased()) }
+    }
+
     public static func presets(for medicationClass: MedicationClass) -> [MedicationPreset] {
         all.filter { $0.medicationClass == medicationClass }
     }

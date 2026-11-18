@@ -288,6 +288,8 @@ private struct MigraineStatusAccessory: View {
     let ongoing: Migraine?
     let onOpenOngoing: (UUID) -> Void
     let onLog: () -> Void
+    /// False on the Duo, where the strip supplies the one (tinted glass) capsule itself.
+    var drawsCapsule: Bool = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
@@ -340,7 +342,7 @@ private struct MigraineStatusAccessory: View {
                 .padding(.horizontal, isInline ? Brand.Space.sm : Brand.Space.lg)
                 .frame(maxWidth: contentMaxWidth, minHeight: 32)
                 // A soft brand tint so the live state reads as a distinct, tappable chip.
-                .background(Capsule().fill(Color.mygraPurple.opacity(0.22)))
+                .background { if drawsCapsule { Capsule().fill(Color.mygraPurple.opacity(0.22)) } }
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
             }
@@ -365,7 +367,7 @@ private struct MigraineStatusAccessory: View {
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, Brand.Space.lg)
                 .frame(maxWidth: contentMaxWidth, minHeight: 32)
-                .background(Capsule().fill(Color.mygraPurple.mix(with: .black, by: 0.12)))
+                .background { if drawsCapsule { Capsule().fill(Color.mygraPurple.mix(with: .black, by: 0.12)) } }
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
         }
@@ -395,18 +397,20 @@ private struct DuoStatusStrip: View {
         Color.clear
             .frame(height: 52)
             .overlay {
-                let chip = MigraineStatusAccessory(ongoing: ongoing, onOpenOngoing: onOpenOngoing, onLog: onLog)
-                    .padding(.horizontal, Brand.Space.sm)
+                // One capsule: the tinted glass is the control's only edge (the accessory draws
+                // no fill of its own here).
+                let tint = ongoing == nil ? Color.mygraPurple.mix(with: .black, by: 0.12) : Color.mygraPurple.opacity(0.5)
+                let chip = MigraineStatusAccessory(ongoing: ongoing, onOpenOngoing: onOpenOngoing, onLog: onLog, drawsCapsule: false)
                 if let fold = layout.foldCenterX {
                     // Open: centered in the leading pane, clear of the hinge.
                     chip
                         .frame(width: min(max(0, fold - Brand.Space.xl * 2), 360))
-                        .glassEffect(.regular, in: Capsule())
+                        .glassEffect(.regular.tint(tint).interactive(), in: Capsule())
                         .frame(width: fold)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     chip
-                        .glassEffect(.regular, in: Capsule())
+                        .glassEffect(.regular.tint(tint).interactive(), in: Capsule())
                         .padding(.horizontal, Brand.Space.sm)
                 }
             }

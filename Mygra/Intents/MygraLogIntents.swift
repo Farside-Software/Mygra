@@ -85,10 +85,20 @@ struct LogMedicationIntent: AppIntent {
         }
         let known = MedicationMemory.resolve(medication, in: MedicationMemory.known(from: migraines))
         let name = known?.name ?? medication.trimmingCharacters(in: .whitespacesAndNewlines)
+        // "Other" has no overuse limit, so a new, unrecognised medication asks for its class
+        // instead of silently falling out of the medication-overuse count.
+        var medicationClass = type?.medicationClass ?? known?.medicationClass ?? MedicationPreset.match(name)?.medicationClass
+        if medicationClass == nil {
+            let chosen = try await $type.requestDisambiguation(
+                among: MygraMedicationClass.allCases,
+                dialog: IntentDialog(LocalizedStringResource(stringLiteral: String(localized: "What type of medication is \(name)?")))
+            )
+            medicationClass = chosen.medicationClass
+        }
         let recorded = session.recordDose(
             on: ongoing,
             name: name,
-            medicationClass: type?.medicationClass ?? known?.medicationClass ?? .other,
+            medicationClass: medicationClass ?? .other,
             dose: (dose ?? known?.dose ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         )
         guard recorded else {

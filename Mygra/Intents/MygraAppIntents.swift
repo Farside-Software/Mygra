@@ -131,6 +131,7 @@ struct StartMigraineIntent: LiveActivityIntent {
             return .result(dialog: "You already have a migraine in progress.")
         }
         session.statusSync.syncNow()
+        if #available(iOS 26.0, *) { MigraineSummarySnippetIntent.reload() }
         return .result(dialog: "Started tracking your migraine. Feel better soon.")
     }
 }
