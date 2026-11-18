@@ -22,6 +22,9 @@ public struct AttackModeView: View {
     /// and a thumb make a stray tap likely.
     @State private var isEndArmed = false
     @State private var layout = LayoutProbe()
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isRegular: Bool { horizontalSizeClass == .regular }
 
     public init() {}
 
@@ -30,6 +33,7 @@ public struct AttackModeView: View {
             AttackColors.background.ignoresSafeArea()
 
             if let ongoing = attack.ongoing {
+                GeometryReader { proxy in
                 ScrollView {
                     if MigraineLayout.isWide(layout, isRegularWidth: false) {
                         // Unfolded Duo: what you read and set on one side of the hinge, what you
@@ -48,20 +52,28 @@ public struct AttackModeView: View {
                         .padding(.horizontal, Brand.Space.lg)
                         .padding(.vertical, Brand.Space.md)
                     } else {
-                        VStack(spacing: Brand.Space.lg) {
+                        // One calm column. On a regular-width screen (iPad) it is wider, and the
+                        // blocks sit in the vertical middle of the screen, Close stays at the top.
+                        VStack(spacing: 0) {
                             topBar
-                            elapsed(since: ongoing.startDate)
-                            intensitySection
-                            medicationSection
-                            endButton
+                            Spacer(minLength: Brand.Space.lg)
+                            VStack(spacing: Brand.Space.lg) {
+                                elapsed(since: ongoing.startDate)
+                                intensitySection
+                                medicationSection
+                                endButton
+                            }
+                            .frame(maxWidth: isRegular ? 720 : 560)
+                            Spacer(minLength: Brand.Space.lg)
                         }
-                        .frame(maxWidth: 560)
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, Brand.Space.lg)
                         .padding(.vertical, Brand.Space.md)
+                        .frame(minHeight: proxy.size.height)
                     }
                 }
                 .scrollIndicators(.hidden)
+                }
             }
 
             // In-app dimming only: a non-interactive black veil over our own UI.
