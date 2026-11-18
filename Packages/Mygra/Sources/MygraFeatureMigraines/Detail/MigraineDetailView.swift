@@ -63,8 +63,13 @@ public struct MigraineDetailView: View {
         .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
         .softScrollEdgesIfAvailable()
         .migraineTopEdgeEffectHidden(layout.hasVerticalBar)
-        .navigationTitle(migraine.isOngoing ? Text("Ongoing Migraine") : Text("Migraine"))
-        .navigationSubtitleIfAvailable(DateFormatting.date(migraine.startDate, useDMY: useDayMonthYearDates))
+        // Hosted beside the list (`onClose` set), the detail's title would leak into the
+        // list's navigation bar, so the list keeps its own "Migraines" title there.
+        .if(onClose == nil) { view in
+            view
+                .navigationTitle(migraine.isOngoing ? Text("Ongoing Migraine") : Text("Migraine"))
+                .navigationSubtitleIfAvailable(DateFormatting.date(migraine.startDate, useDMY: useDayMonthYearDates))
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
         .task {

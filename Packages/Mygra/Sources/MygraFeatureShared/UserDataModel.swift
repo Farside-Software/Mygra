@@ -81,8 +81,15 @@ public final class UserDataModel {
         surfacing { try updateUserUseCase(configure: configure) }
     }
 
-    /// Copies every field of `edited` onto the stored profile.
+    /// Copies every field of `edited` onto the stored profile, creating the profile
+    /// from a copy when none is stored yet (onboarding's profile step was skipped).
     public func apply(_ edited: User) {
+        guard currentUser != nil else {
+            let copy = User()
+            copy.apply(edited)
+            save(copy)
+            return
+        }
         update { $0.apply(edited) }
     }
 
