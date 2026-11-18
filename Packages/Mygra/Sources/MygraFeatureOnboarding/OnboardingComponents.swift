@@ -127,6 +127,7 @@ struct OnboardingFeatureCard<Rows: View>: View {
 
     var body: some View {
         VStack(spacing: 0) { rows }
+            .frame(maxWidth: .infinity)
             .cardSurface()
     }
 }
@@ -160,7 +161,10 @@ struct OnboardingColumns<Lead: View, Trail: View>: View {
                     .padding(.horizontal, Brand.Space.lg)
                     .frame(width: split.leadingWidth)
                 Spacer(minLength: 0)
+                // The card (and, below it, the buttons) fill the half's readable width, the same
+                // on every page.
                 trail
+                    .frame(maxWidth: Brand.readableWidth)
                     .padding(.horizontal, Brand.Space.lg)
                     .frame(width: split.trailingWidth)
             }

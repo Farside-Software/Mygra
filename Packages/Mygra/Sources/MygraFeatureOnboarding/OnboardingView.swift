@@ -52,12 +52,27 @@ public struct OnboardingView: View {
                     .ignoresSafeArea()
                     .accessibilityHidden(true)
 
-                VStack(spacing: 0) {
-                    progress
-                        .padding(.top, Brand.Space.xs)
-                        .padding(.bottom, Brand.Space.sm)
-                    pages
-                    bottomBar
+                if let split = OnboardingSplit(probe) {
+                    // Unfolded: the progress dots sit at the same spot on every page, centred
+                    // in the leading half, whatever the navigation strip does on that page.
+                    VStack(spacing: 0) {
+                        pages
+                        bottomBar
+                    }
+                    .overlay(alignment: .top) {
+                        progress
+                            .frame(width: (split.leadingWidth + split.trailingOffset) / 2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, Brand.Space.xl)
+                    }
+                } else {
+                    VStack(spacing: 0) {
+                        progress
+                            .padding(.top, Brand.Space.xs)
+                            .padding(.bottom, Brand.Space.sm)
+                        pages
+                        bottomBar
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -236,11 +251,11 @@ public struct OnboardingView: View {
             .frame(minHeight: 44)
         }
         .frame(maxWidth: Brand.readableWidth)
-        .padding(.horizontal, Brand.Space.xl)
+        .padding(.horizontal, OnboardingSplit(probe) != nil ? Brand.Space.lg : Brand.Space.xl)
         .padding(.top, Brand.Space.md)
         .padding(.bottom, Brand.Space.sm)
+        .frame(width: OnboardingSplit(probe)?.trailingWidth)
         .frame(maxWidth: .infinity, alignment: OnboardingSplit(probe) != nil ? .trailing : .center)
-        .padding(.leading, OnboardingSplit(probe).map { $0.trailingOffset - Brand.Space.xl } ?? 0)
     }
 
     // MARK: Actions
