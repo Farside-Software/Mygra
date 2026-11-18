@@ -8032,30 +8032,6 @@
       },
       "shouldGenerateSymbol" : false
     },
-    "Graphics" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gráficos"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Graphisme"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "グラフィック"
-          }
-        }
-      },
-      "shouldGenerateSymbol" : false
-    },
     "HIT-6" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15725,30 +15701,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "簡単なメモ（任意）"
-          }
-        }
-      },
-      "shouldGenerateSymbol" : false
-    },
-    "Rahul Parmar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rahul Parmar"
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rahul Parmar"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rahul Parmar"
           }
         }
       },

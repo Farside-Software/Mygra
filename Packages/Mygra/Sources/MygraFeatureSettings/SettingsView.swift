@@ -431,7 +431,6 @@ public struct SettingsView: View {
                     .labelStyle(.settingsIcon(.gray))
             }
             creditRow(title: "Developer", name: "Nick Molargik", url: "https://www.linkedin.com/in/nicholas-molargik/", systemImage: "hammer.fill", tint: .mygraBlue)
-            creditRow(title: "Graphics", name: "Rahul Parmar", url: "https://www.linkedin.com/in/rpn4499/", systemImage: "paintpalette.fill", tint: .mygraPurple)
             creditRow(title: "Publisher", name: Company.legalName, url: Company.website.absoluteString, systemImage: "building.2.fill", tint: .indigo)
             Link(destination: Self.writeReviewURL) {
                 Label("Rate Mygra", systemImage: "star.fill")
