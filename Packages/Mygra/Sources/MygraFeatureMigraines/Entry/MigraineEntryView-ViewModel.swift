@@ -59,8 +59,8 @@ extension MigraineEntryView {
         var greeting = ""
         static let greetingOptions: [String] = [
             String(localized: "We’ve got you."),
-            String(localized: "We’ll help you through this!"),
-            String(localized: "Sorry you’re dealing with this..."),
+            String(localized: "We’ll help you through this."),
+            String(localized: "Sorry you’re dealing with this."),
             String(localized: "Let’s get you some relief."),
             String(localized: "Here to help."),
         ]

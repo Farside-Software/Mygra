@@ -113,7 +113,7 @@ struct MigraineRowView: View {
 
     private var durationLabel: some View {
         TimelineView(.periodic(from: .now, by: 1.0)) { context in
-            Label(MigraineDates.durationString(context.date.timeIntervalSince(migraine.startDate)), systemImage: "clock.fill")
+            Label(MigraineDates.durationString(context.date.timeIntervalSince(migraine.startDate), ticking: true), systemImage: "clock.fill")
                 .monospacedDigit()
                 .foregroundStyle(.mygraBlue)
                 .contentTransition(.numericText())

@@ -48,10 +48,15 @@ struct MigraineDatesTests {
     }
 
     @Test(arguments: [
-        (0.0, "0m 00s"), (65.0, "1m 05s"), (3600.0, "1h 00m 00s"), (7325.0, "2h 02m 05s"), (-10.0, "0m 00s"),
+        (0.0, "0s"), (45.0, "45s"), (65.0, "1m"), (3600.0, "1h 00m"), (14400.0, "4h 00m"), (7325.0, "2h 02m"), (-10.0, "0s"),
     ])
     func durationString(seconds: Double, expected: String) {
         #expect(MigraineDates.durationString(seconds) == expected)
+    }
+
+    @Test(arguments: [(0.0, "0m 00s"), (65.0, "1m 05s"), (7325.0, "2h 02m 05s")])
+    func tickingDurationString(seconds: Double, expected: String) {
+        #expect(MigraineDates.durationString(seconds, ticking: true) == expected)
     }
 
     @Test(arguments: [(0.0, "0m"), (1800.0, "30m"), (5400.0, "1h 30m")])
