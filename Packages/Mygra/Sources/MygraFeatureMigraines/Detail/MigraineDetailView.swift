@@ -21,6 +21,7 @@ public struct MigraineDetailView: View {
     @Environment(HealthManager.self) private var healthManager
     @Environment(AttackModeModel.self) private var attackMode
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @AppStorage(AppStorageKeys.useMetricUnits) private var useMetricUnits: Bool = false
     @AppStorage(AppStorageKeys.useDayMonthYearDates) private var useDayMonthYearDates: Bool = false
@@ -36,65 +37,32 @@ public struct MigraineDetailView: View {
     @State private var showingIntensitySheet = false
     @State private var showingMedicationSheet = false
     @State private var showPastWeatherAlert = false
+    @State private var layout = LayoutProbe()
 
     public init(migraine: Migraine, onClose: (() -> Void)? = nil) {
         self.migraine = migraine
         self.onClose = onClose
     }
 
+    private var isWide: Bool {
+        MigraineLayout.isWide(layout, isRegularWidth: horizontalSizeClass == .regular)
+    }
+
     public var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                MigraineDetailHeaderView(
-                    migraine: migraine,
-                    startText: DateFormatting.dateTime(migraine.startDate, useDMY: useDayMonthYearDates),
-                    endText: migraine.endDate.map { DateFormatting.dateTime($0, useDMY: useDayMonthYearDates) } ?? String(localized: "Ongoing"),
-                    durationText: MigraineDates.durationString((migraine.endDate ?? Date()).timeIntervalSince(migraine.startDate)),
-                    endError: endError,
-                    onEndTap: { showingEndSheet = true }
-                )
-
-                if migraine.isOngoing {
-                    Button {
-                        Haptics.lightImpact()
-                        attackMode.present()
-                    } label: {
-                        Label("Open Attack Mode", systemImage: "moon.fill")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .secondaryActionButton(tint: .mygraPurple)
-                    .accessibilityIdentifier("openAttackModeButton")
-                    .accessibilityHint("A dark, one-tap screen for logging during a severe migraine")
-                }
-
-                IntensityChartView(
-                    samples: migraine.intensitySamples ?? [],
-                    onUpdateIntensity: migraine.isOngoing ? { showingIntensitySheet = true } : nil
-                )
-
-                MedicationSectionView(migraine: migraine) { showingMedicationSheet = true }
-
-                InsightSectionView(migraine: migraine)
-
-                if let note = migraine.note, !note.isEmpty {
-                    NoteDetailView(note: note)
-                }
-                if !migraine.triggers.isEmpty || !migraine.customTriggers.isEmpty {
-                    TriggersDetailView(triggers: migraine.triggers, customTriggers: migraine.customTriggers)
-                }
-                if let weather = migraine.weather {
-                    WeatherDetailView(weather: weather, useMetricUnits: useMetricUnits)
-                }
-                if let health = migraine.health {
-                    HealthDetailView(health: health, useMetricUnits: useMetricUnits)
+            Group {
+                if isWide {
+                    wideContent
+                } else {
+                    stackedContent
                 }
             }
-            .frame(maxWidth: 760)
+            .frame(maxWidth: isWide ? MigraineLayout.wideMaxWidth : MigraineLayout.singleColumnMaxWidth)
             .frame(maxWidth: .infinity)
-            .padding()
         }
+        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
         .softScrollEdgesIfAvailable()
+        .migraineTopEdgeEffectHidden(layout.hasVerticalBar)
         .navigationTitle(migraine.isOngoing ? Text("Ongoing Migraine") : Text("Migraine"))
         .navigationSubtitleIfAvailable(DateFormatting.date(migraine.startDate, useDMY: useDayMonthYearDates))
         .navigationBarTitleDisplayMode(.inline)
@@ -165,27 +133,107 @@ public struct MigraineDetailView: View {
         }
     }
 
+    // MARK: - Content
+
+    private var header: some View {
+        MigraineDetailHeaderView(
+            migraine: migraine,
+            startText: DateFormatting.dateTime(migraine.startDate, useDMY: useDayMonthYearDates),
+            endText: migraine.endDate.map { DateFormatting.dateTime($0, useDMY: useDayMonthYearDates) } ?? String(localized: "Ongoing"),
+            durationText: MigraineDates.durationString((migraine.endDate ?? Date()).timeIntervalSince(migraine.startDate)),
+            endError: endError,
+            onEndTap: { showingEndSheet = true }
+        )
+    }
+
+    private var chart: some View {
+        IntensityChartView(
+            samples: migraine.intensitySamples ?? [],
+            onUpdateIntensity: migraine.isOngoing ? { showingIntensitySheet = true } : nil
+        )
+    }
+
+    private var medication: some View {
+        MedicationSectionView(migraine: migraine) { showingMedicationSheet = true }
+    }
+
+    @ViewBuilder
+    private var contextCards: some View {
+        if let note = migraine.note, !note.isEmpty {
+            NoteDetailView(note: note)
+        }
+        if !migraine.triggers.isEmpty || !migraine.customTriggers.isEmpty {
+            TriggersDetailView(triggers: migraine.triggers, customTriggers: migraine.customTriggers)
+        }
+        if let health = migraine.health {
+            HealthDetailView(health: health, useMetricUnits: useMetricUnits)
+        }
+        if let weather = migraine.weather {
+            WeatherDetailView(weather: weather, useMetricUnits: useMetricUnits)
+        }
+    }
+
+    /// Phone, folded Duo, narrow windows: one calm column. On the Duo the nav bar is the
+    /// trailing strip and the title already sits above, so no extra gap at the top.
+    private var stackedContent: some View {
+        VStack(spacing: Brand.Space.lg) {
+            header
+            chart
+            medication
+            InsightSectionView(migraine: migraine)
+            contextCards
+        }
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.top, LayoutProbe.detailTopInset(hasVerticalBar: layout.hasVerticalBar, hasTitleRow: true))
+        .padding(.bottom, Brand.Space.xxl)
+    }
+
+    /// Unfolded Duo and iPad: two equal columns with a fixed assignment, so no card jumps
+    /// sides. The timeline, chart, medication and insight sit on one side, what the record
+    /// captured around it (notes, triggers, Health, weather) on the other.
+    /// While a fold is active the gap widens so the hinge sits between the columns.
+    private var wideContent: some View {
+        MigraineTwoColumns(spacing: MigraineLayout.columnGap(layout)) {
+            VStack(spacing: Brand.Space.lg) {
+                header
+                chart
+                medication
+                InsightSectionView(migraine: migraine)
+            }
+            VStack(spacing: Brand.Space.lg) {
+                contextCards
+            }
+        }
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.top, LayoutProbe.detailTopInset(hasVerticalBar: layout.hasVerticalBar, hasTitleRow: true))
+        .padding(.bottom, Brand.Space.xxl)
+    }
+
     // MARK: - Toolbar
 
-    /// Pin stays a one-tap action; the rarer edit/delete actions live in a menu so the
-    /// bar never crowds on iPhone and destructive actions aren't a stray tap away.
+    /// One menu holds every secondary action (pin, Attack Mode while ongoing, modify, delete),
+    /// so the bar stays one button wide on the iPhone Duo's vertical strip and destructive
+    /// actions aren't a stray tap away. The page's one primary action is End Migraine.
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
-            Button {
-                Haptics.lightImpact()
-                migraineData.togglePinned(migraine)
-            } label: {
-                Label(migraine.isPinned ? "Unpin" : "Pin", systemImage: migraine.isPinned ? "pin.fill" : "pin")
-                    .symbolEffect(.bounce, value: migraine.isPinned)
-            }
-            .tint(migraine.isPinned ? .yellow : nil)
-            .accessibilityLabel(migraine.isPinned ? "Unpin migraine" : "Pin migraine")
-            .accessibilityHint("Pinned migraines appear at the top of the list")
-        }
-        if !migraine.isOngoing {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
+            Menu {
+                Button {
+                    Haptics.lightImpact()
+                    migraineData.togglePinned(migraine)
+                } label: {
+                    Label(migraine.isPinned ? "Unpin" : "Pin", systemImage: migraine.isPinned ? "pin.slash" : "pin")
+                }
+                .accessibilityIdentifier("pinMigraineButton")
+                if migraine.isOngoing {
+                    Button {
+                        Haptics.lightImpact()
+                        attackMode.present()
+                    } label: {
+                        Label("Attack Mode", systemImage: "moon.fill")
+                    }
+                    .accessibilityIdentifier("openAttackModeButton")
+                } else {
                     Button {
                         showingModifySheet = true
                     } label: {
@@ -199,11 +247,11 @@ public struct MigraineDetailView: View {
                         Label("Delete Migraine", systemImage: "trash")
                     }
                     .accessibilityIdentifier("deleteMigraineButton")
-                } label: {
-                    Label("More", systemImage: "ellipsis")
                 }
-                .accessibilityIdentifier("migraineMoreMenu")
+            } label: {
+                Label("More", systemImage: migraine.isPinned ? "pin.circle.fill" : "ellipsis")
             }
+            .accessibilityIdentifier("migraineMoreMenu")
         }
     }
 

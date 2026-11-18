@@ -21,6 +21,7 @@ public struct AttackModeView: View {
     /// First tap on End Attack arms it; the second ends. A dark room, a throbbing head,
     /// and a thumb make a stray tap likely.
     @State private var isEndArmed = false
+    @State private var layout = LayoutProbe()
 
     public init() {}
 
@@ -30,17 +31,35 @@ public struct AttackModeView: View {
 
             if let ongoing = attack.ongoing {
                 ScrollView {
-                    VStack(spacing: Brand.Space.lg) {
-                        topBar
-                        elapsed(since: ongoing.startDate)
-                        intensitySection
-                        medicationSection
-                        endButton
+                    if MigraineLayout.isWide(layout, isRegularWidth: false) {
+                        // Unfolded Duo: what you read and set on one side of the hinge, what you
+                        // take and the way out on the other. Same blocks, same order, same targets.
+                        MigraineTwoColumns(spacing: MigraineLayout.columnGap(layout)) {
+                            VStack(spacing: Brand.Space.lg) {
+                                topBar
+                                elapsed(since: ongoing.startDate)
+                                intensitySection
+                            }
+                            VStack(spacing: Brand.Space.lg) {
+                                medicationSection
+                                endButton
+                            }
+                        }
+                        .padding(.horizontal, Brand.Space.lg)
+                        .padding(.vertical, Brand.Space.md)
+                    } else {
+                        VStack(spacing: Brand.Space.lg) {
+                            topBar
+                            elapsed(since: ongoing.startDate)
+                            intensitySection
+                            medicationSection
+                            endButton
+                        }
+                        .frame(maxWidth: 560)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, Brand.Space.lg)
+                        .padding(.vertical, Brand.Space.md)
                     }
-                    .frame(maxWidth: 560)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, Brand.Space.lg)
-                    .padding(.vertical, Brand.Space.md)
                 }
                 .scrollIndicators(.hidden)
             }
@@ -52,6 +71,7 @@ public struct AttackModeView: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
+        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
         .preferredColorScheme(.dark)
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)

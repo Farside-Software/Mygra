@@ -18,8 +18,16 @@ struct MedicationSectionView: View {
     let onAdd: () -> Void
 
     var body: some View {
-        InfoDetailView(title: String(localized: "Medication")) {
+        MigraineCard("Medication", systemImage: "pills.fill", trailing: {
+            MigraineQuietAction(title: "Add", systemImage: "plus", action: onAdd)
+                .accessibilityIdentifier("addMedicationButton")
+        }) {
             VStack(alignment: .leading, spacing: Brand.Space.sm) {
+                if migraine.sortedMedications.isEmpty {
+                    Text("No medication logged for this migraine.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
                 ForEach(migraine.sortedMedications) { dose in
                     HStack(alignment: .firstTextBaseline) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -39,14 +47,6 @@ struct MedicationSectionView: View {
                         .accessibilityLabel(Text("Remove \(dose.name)"))
                     }
                 }
-                Button {
-                    Haptics.lightImpact()
-                    onAdd()
-                } label: {
-                    Label("Add Medication", systemImage: "pills.fill")
-                }
-                .glassActionButton(tint: .mygraPurple)
-                .accessibilityIdentifier("addMedicationButton")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
