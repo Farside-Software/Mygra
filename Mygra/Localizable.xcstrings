@@ -3259,25 +3259,25 @@
       },
       "shouldGenerateSymbol" : false
     },
-    "Avg duration last 2 weeks: %.2f h vs prior: %.2f h." : {
+    "Avg duration last 2 weeks: %@ vs prior: %@." : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Duración media últimas 2 semanas: %.2f h frente a antes: %.2f h."
+            "value" : "Duración media últimas 2 semanas: %@ frente a antes: %@."
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Durée moyenne des 2 dernières semaines : %.2f h contre %.2f h auparavant."
+            "value" : "Durée moyenne des 2 dernières semaines : %@ contre %@ auparavant."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "直近 2 週間の平均持続時間：%.2f 時間（それ以前：%.2f 時間）。"
+            "value" : "直近 2 週間の平均持続時間：%@（それ以前：%@）。"
           }
         }
       },

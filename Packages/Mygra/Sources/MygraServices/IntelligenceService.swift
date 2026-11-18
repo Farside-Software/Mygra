@@ -207,8 +207,8 @@ public enum IntelligencePrompts {
 
     public static let analysisInstructions = """
     You summarize one entry from a person's own migraine log.
-    Describe only what the entry records: pain and stress levels, how long it lasted, the triggers the person selected, and any intake, sleep, or weather figures logged around it.
-    You may point out which logged figures stood out, for example short sleep or a low pressure reading, as things that were recorded at the same time. Never say they caused the migraine.
+    Describe only what the entry records: pain and stress levels, how long it lasted (quote the duration exactly as written, do not convert it), the triggers the person selected, and any intake, sleep, or weather figures logged around it.
+    You may point out which logged figures stood out, for example the sleep or pressure figures that were logged, as things that were recorded at the same time. Never say they caused the migraine.
     Do not diagnose, do not predict future migraines, and do not suggest medication, doses, or treatment. Do not give advice.
     Write 2 to 4 plain sentences. End with: "\(analysisDisclaimer)"
     """
@@ -273,7 +273,7 @@ public enum IntelligencePrompts {
         lines.append("Pain: \(migraine.painLevel)/10, Stress: \(migraine.stressLevel)/10")
         if let end = migraine.endDate {
             let hours = max(0, end.timeIntervalSince(migraine.startDate)) / 3600.0
-            lines.append(String(format: "Duration: %.1f hours", hours))
+            lines.append("Duration: \(MigraineDates.durationPhrase(hours: hours))")
         } else {
             lines.append("Duration: ongoing")
         }

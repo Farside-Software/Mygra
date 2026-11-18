@@ -123,3 +123,14 @@ struct MigraineRecencyTests {
         if case .daysAgo(let d) = MigraineRecency.of(items, hasOngoing: false, now: now) { #expect(d == 1 || d == 2) } else { Issue.record("expected daysAgo") }
     }
 }
+
+@Suite("Duration phrase")
+struct DurationPhraseTests {
+    @Test("under an hour reads in minutes, never 0.0 hours")
+    func phrase() {
+        #expect(MigraineDates.durationPhrase(hours: 0.75) == "45 min")
+        #expect(MigraineDates.durationPhrase(hours: 0.01) == "1 min")
+        #expect(MigraineDates.durationPhrase(hours: 2) == "2 h")
+        #expect(MigraineDates.durationPhrase(hours: 1 + 20.0 / 60) == "1 h 20 min")
+    }
+}

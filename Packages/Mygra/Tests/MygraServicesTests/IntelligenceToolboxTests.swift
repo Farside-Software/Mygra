@@ -68,7 +68,7 @@ struct IntelligenceToolboxTests {
         let ongoing = IntelligenceToolbox.row(for: MigraineSnapshot(startDate: date(2026, 11, 10), painLevel: 4), calendar: calendar)
         #expect(ongoing.contains("ongoing"))
         let finished = IntelligenceToolbox.row(for: snapshots[0], calendar: calendar)
-        #expect(finished.contains("4.0 h"))
+        #expect(finished.contains("4 h"))
     }
 
     @Test func summaryCoversAPeriod() {

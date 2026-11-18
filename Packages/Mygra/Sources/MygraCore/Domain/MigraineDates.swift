@@ -73,6 +73,16 @@ nonisolated public enum MigraineDates {
         }
     }
 
+    /// A length of time in the app's short wording, rounded to the minute: "45 min", "2 h", "1 h 20 min".
+    /// Used wherever a duration is written into a sentence, so under an hour never reads "0.0 hours".
+    public static func durationPhrase(hours value: Double) -> String {
+        let totalMinutes = max(0, Int((value * 60).rounded()))
+        let hours = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        if hours == 0 { return "\(minutes) min" }
+        return minutes == 0 ? "\(hours) h" : "\(hours) h \(minutes) min"
+    }
+
     /// The Health sampling window for a migraine that started at `start`: that calendar
     /// day, capped at `now` when the day is today.
     public static func healthWindow(forStart start: Date, now: Date = Date(), calendar: Calendar = .current) -> DateInterval {

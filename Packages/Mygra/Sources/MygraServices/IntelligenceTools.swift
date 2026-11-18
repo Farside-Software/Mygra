@@ -77,7 +77,7 @@ nonisolated public enum IntelligenceToolbox {
             snapshot.startDate.formatted(formatter),
             "pain \(snapshot.painLevel)/10",
             "stress \(snapshot.stressLevel)/10",
-            snapshot.durationHours.map { String(format: "%.1f h", $0) } ?? "ongoing",
+            snapshot.durationHours.map { MigraineDates.durationPhrase(hours: $0) } ?? "ongoing",
         ]
         if !snapshot.triggerNames.isEmpty { parts.append("triggers: " + snapshot.triggerNames.joined(separator: ", ")) }
         if !snapshot.medications.isEmpty { parts.append("doses: " + snapshot.medications.joined(separator: ", ")) }
@@ -104,7 +104,7 @@ nonisolated public enum IntelligenceToolbox {
         lines.append("Days with a migraine: \(summary.migraineDays)")
         if let pain = summary.averagePain { lines.append(String(format: "Average pain: %.1f/10", pain)) }
         if let highest = summary.highestPain { lines.append("Highest pain: \(highest)/10") }
-        if let hours = summary.averageDurationHours { lines.append(String(format: "Average duration of finished entries: %.1f hours", hours)) }
+        if let hours = summary.averageDurationHours { lines.append("Average duration of finished entries: \(MigraineDates.durationPhrase(hours: hours))") }
         if !summary.topTriggers.isEmpty {
             lines.append("Most logged triggers: " + summary.topTriggers.map { "\($0.name) (\($0.count))" }.joined(separator: ", "))
         }
