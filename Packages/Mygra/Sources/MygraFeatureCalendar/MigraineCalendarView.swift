@@ -47,13 +47,22 @@ public struct MigraineCalendarView: View {
         return horizontalSizeClass == .regular && layout.width >= 700
     }
 
+    /// Regular-width iPad windows spend the space on the month: roomy cells that grow with the
+    /// pane. The folded Duo stays compact, the unfolded Duo keeps the standard cell.
+    private var cellHeight: CGFloat {
+        if PhoneDuo.isDuo { return isWide ? 44 : 40 }
+        guard isWide else { return 44 }
+        let monthWidth = min(720, layout.width * 0.6)
+        return min(max(monthWidth / 7 * 1.1, 56), 108)
+    }
+
     public var body: some View {
         Group {
             if isWide {
                 let gap = layout.isFoldActive ? Brand.Space.xxl * 2 : Brand.Space.xl
                 // With a fold, the month takes the whole left screen and the day list the whole
                 // right one; the gap between them is the hinge. Without one, a fixed month width.
-                let monthWidth: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? min(520, layout.width * 0.55)
+                let monthWidth: CGFloat = layout.foldCenterX.map { max($0 - gap / 2, 0) } ?? min(720, layout.width * 0.6)
                 FoldSplitLayout(leadingWidth: monthWidth, separatorWidth: layout.hasFold ? gap : 1) {
                     calendarPane
                     if layout.hasFold {
@@ -116,7 +125,7 @@ public struct MigraineCalendarView: View {
                 selectedDate: $selectedDate,
                 migraines: filteredMigraines,
                 isPeriodDay: cycleData.isActive ? { cycleData.isPeriodDay($0) } : nil,
-                cellHeight: PhoneDuo.isDuo && !isWide ? 40 : 44
+                cellHeight: cellHeight
             )
                 .padding(.horizontal)
                 .id(calendar.dateInterval(of: .month, for: displayedMonth)?.start ?? displayedMonth)

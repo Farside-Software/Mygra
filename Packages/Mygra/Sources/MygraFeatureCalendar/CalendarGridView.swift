@@ -93,19 +93,19 @@ private struct DayCell: View {
         } label: {
             VStack(spacing: 4) {
                 Text(calendar.component(.day, from: date), format: .number)
-                    .font(.body)
+                    .font(height >= 56 ? .title3 : .body)
                     .fontWeight(isToday || isSelected ? .bold : .regular)
                     .monospacedDigit()
                     .foregroundStyle(isSelected ? .white : (isToday ? .mygraBlue : .primary))
 
                 if migrainesForDay.isEmpty {
-                    Color.clear.frame(height: 6)
+                    Color.clear.frame(height: height >= 56 ? 8 : 6)
                 } else {
                     HStack(spacing: 2) {
                         ForEach(migrainesForDay.prefix(3)) { migraine in
                             Circle()
                                 .fill(migraine.severity.color)
-                                .frame(width: 6, height: 6)
+                                .frame(width: height >= 56 ? 8 : 6, height: height >= 56 ? 8 : 6)
                         }
                         if migrainesForDay.count > 3 {
                             Text("+")
