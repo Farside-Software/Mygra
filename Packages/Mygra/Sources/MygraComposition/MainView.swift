@@ -290,8 +290,10 @@ private struct MigraineStatusAccessory: View {
     let ongoing: Migraine?
     let onOpenOngoing: (UUID) -> Void
     let onLog: () -> Void
-    /// False on the Duo, where the strip supplies the one (tinted glass) capsule itself.
-    var drawsCapsule: Bool = true
+    /// True on the Duo, where the strip's own tinted glass is the control's single edge and
+    /// the label is white. Elsewhere the system accessory's glass is the one edge and the
+    /// label takes the brand colour (no second, filled capsule inside it).
+    var onTintedSurface: Bool = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
@@ -344,7 +346,6 @@ private struct MigraineStatusAccessory: View {
                 .padding(.horizontal, isInline ? Brand.Space.sm : Brand.Space.lg)
                 .frame(maxWidth: contentMaxWidth, minHeight: 32)
                 // A soft brand tint so the live state reads as a distinct, tappable chip.
-                .background { if drawsCapsule { Capsule().fill(Color.mygraPurple.opacity(0.22)) } }
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
             }
@@ -364,12 +365,11 @@ private struct MigraineStatusAccessory: View {
         Button(action: onLog) {
             Label("Log a Migraine", systemImage: "plus")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(onTintedSurface ? AnyShapeStyle(.white) : AnyShapeStyle(Color.mygraPurple.mix(with: .black, by: 0.12)))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, Brand.Space.lg)
                 .frame(maxWidth: contentMaxWidth, minHeight: 32)
-                .background { if drawsCapsule { Capsule().fill(Color.mygraPurple.mix(with: .black, by: 0.12)) } }
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
         }
@@ -402,7 +402,7 @@ private struct DuoStatusStrip: View {
                 // One capsule: the tinted glass is the control's only edge (the accessory draws
                 // no fill of its own here).
                 let tint = ongoing == nil ? Color.mygraPurple.mix(with: .black, by: 0.12) : Color.mygraPurple.opacity(0.5)
-                let chip = MigraineStatusAccessory(ongoing: ongoing, onOpenOngoing: onOpenOngoing, onLog: onLog, drawsCapsule: false)
+                let chip = MigraineStatusAccessory(ongoing: ongoing, onOpenOngoing: onOpenOngoing, onLog: onLog, onTintedSurface: true)
                 if let fold = layout.foldCenterX {
                     // Open: centered in the leading pane, clear of the hinge.
                     chip

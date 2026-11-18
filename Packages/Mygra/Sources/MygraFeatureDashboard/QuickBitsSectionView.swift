@@ -26,7 +26,7 @@ struct QuickBitsSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("Quick Bits", systemImage: "lightbulb.max.fill")
+                Label { Text("Quick Bits") } icon: { Image(systemName: "lightbulb.max.fill").foregroundStyle(Color.mygraPurple) }
                     .font(.headline)
                 Spacer()
                 if insights.isRefreshing {

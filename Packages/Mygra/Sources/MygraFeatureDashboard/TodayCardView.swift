@@ -52,7 +52,7 @@ struct TodayCardView: View {
     private var authorizedCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Today", systemImage: "calendar")
+                Label { Text("Today") } icon: { Image(systemName: "calendar").foregroundStyle(Color.mygraPurple) }
                     .font(.headline)
                 Spacer()
                 Button {

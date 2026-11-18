@@ -127,7 +127,7 @@ struct LastThirtyDaysCard: View {
 
                 HStack(alignment: .top, spacing: Brand.Space.lg) {
                     footnote(String(localized: "Days with a migraine"), "\(summary.migraineDaysInLast30)")
-                    footnote(String(localized: "Longest clear stretch"), String(localized: "\(summary.longestFreeStretchInLast30) days"))
+                    footnote(String(localized: "Longest clear stretch"), summary.longestFreeStretchInLast30 == 1 ? String(localized: "1 day") : String(localized: "\(summary.longestFreeStretchInLast30) days"))
                 }
             }
         }
