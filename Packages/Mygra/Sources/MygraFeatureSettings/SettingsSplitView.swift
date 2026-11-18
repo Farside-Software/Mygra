@@ -135,6 +135,7 @@ public struct SettingsSplitView: View {
         NavigationSplitView {
             SettingsView()
                 .navigationTitle("Settings")
+                .statusSubtitle()
                 .environment(\.settingsSelection, $selection)
                 .navigationSplitViewColumnWidth(min: 320, ideal: 350, max: 400)
         } detail: {

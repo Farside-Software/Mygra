@@ -30,7 +30,6 @@ public struct RootView: View {
 
     public var body: some View {
         stageView
-            .toastContainer()
             .environment(session.router)
             .environment(session.migraineData)
             .environment(session.tagData)
@@ -93,7 +92,7 @@ public struct RootView: View {
     }
 
     /// iCloud sync runs in the background: returning users with iCloud get a lightweight
-    /// toast instead of a blocking screen.
+    /// quiet status line instead of a blocking screen.
     private func handleMainEntry() {
         guard !didShowSyncToast, wasReturningUser, session.cloudSyncManager.isCloudAvailable else { return }
         didShowSyncToast = true

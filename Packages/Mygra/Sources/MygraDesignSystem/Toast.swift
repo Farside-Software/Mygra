@@ -2,27 +2,25 @@
 //  Toast.swift
 //  MygraDesignSystem
 //
-//  Lightweight top-of-screen toasts: style, item, manager, rendering, and the
-//  `.toastContainer()` overlay (background iCloud sync status, persistence errors, and
-//  general feedback instead of blocking screens).
+//  Quiet, inline status feedback, as in Opalite 2.0. `ToastManager` (the name predates the
+//  design) routes success and info items to `currentToast`, which the screen's navigation
+//  subtitle shows for a few seconds (iOS 26+; before that a slim row under the navigation
+//  bar), and errors to `currentAlert`, which is presented as a standard system alert over
+//  whatever is on screen, sheets included. Nothing floats over content, and no error is
+//  ever silent.
 //
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
-// MARK: - Toast Style
+// MARK: - Style
 
-public enum ToastStyle: Sendable {
+public enum ToastStyle: Sendable, Equatable {
     case error
     case success
     case info
-
-    public var tint: Color {
-        switch self {
-        case .error: .red
-        case .success: .green
-        case .info: .mygraBlue
-        }
-    }
 
     public var iconName: String {
         switch self {
@@ -33,7 +31,7 @@ public enum ToastStyle: Sendable {
     }
 }
 
-// MARK: - Toast Item
+// MARK: - Item
 
 public struct ToastItem: Identifiable, Equatable {
     public let id = UUID()
@@ -49,31 +47,38 @@ public struct ToastItem: Identifiable, Equatable {
         self.duration = duration
     }
 
-    public static func == (lhs: ToastItem, rhs: ToastItem) -> Bool {
-        lhs.id == rhs.id
-    }
+    public var symbol: String { icon ?? style.iconName }
+
+    public static func == (lhs: ToastItem, rhs: ToastItem) -> Bool { lhs.id == rhs.id }
 }
 
-// MARK: - Toast Manager
+// MARK: - Manager
 
 @MainActor
 @Observable
 public final class ToastManager {
+    /// The status shown in the navigation subtitle (or the iOS 18 row): success and info only.
     public private(set) var currentToast: ToastItem?
+    /// The latest error, kept until acknowledged in the system alert.
+    public private(set) var currentAlert: ToastItem?
     @ObservationIgnored private var dismissTask: Task<Void, Never>?
 
     public init() {}
 
+    /// Errors become an alert; everything else a transient status line.
     public func show(_ toast: ToastItem) {
-        dismissTask?.cancel()
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-            currentToast = toast
+        if toast.style == .error {
+            currentAlert = toast
+            presentAlert(toast)
+            return
         }
+        dismissTask?.cancel()
+        withAnimation(.easeInOut(duration: 0.2)) { currentToast = toast }
+        // A subtitle change is not announced on its own.
+        AccessibilityNotification.Announcement(toast.message).post()
         dismissTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(toast.duration))
-            if !Task.isCancelled {
-                self?.dismiss()
-            }
+            if !Task.isCancelled { self?.dismiss() }
         }
     }
 
@@ -90,127 +95,128 @@ public final class ToastManager {
         show(ToastItem(message: message, style: .error))
     }
 
+    /// Clears the status (not a pending alert).
     public func dismiss() {
         dismissTask?.cancel()
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-            currentToast = nil
-        }
+        withAnimation(.easeInOut(duration: 0.2)) { currentToast = nil }
     }
+
+    public func dismissAlert() {
+        currentAlert = nil
+    }
+
+    // MARK: System alert
+
+    #if os(iOS)
+    @ObservationIgnored private weak var presentedAlert: UIAlertController?
+
+    /// Presents a standard alert on the top-most view controller, so it shows over sheets
+    /// and full-screen covers too. A second error replaces the one on screen.
+    private func presentAlert(_ item: ToastItem) {
+        guard let top = Self.topViewController() else { return }
+        if let presentedAlert, presentedAlert.presentingViewController != nil {
+            presentedAlert.title = item.message
+            return
+        }
+        let alert = UIAlertController(title: item.message, message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: String(localized: "OK"), style: .cancel) { [weak self] _ in
+            self?.dismissAlert()
+        })
+        presentedAlert = alert
+        top.present(alert, animated: true)
+    }
+
+    private static func topViewController() -> UIViewController? {
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+            ?? UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        var top = scene?.windows.first(where: \.isKeyWindow)?.rootViewController ?? scene?.windows.first?.rootViewController
+        while let next = top?.presentedViewController { top = next }
+        return top
+    }
+    #else
+    private func presentAlert(_ item: ToastItem) {}
+    #endif
 }
 
 #if os(iOS)
 
-// MARK: - Toast View
+// MARK: - Status row (before iOS 26)
 
-public struct ToastView: View {
+private struct StatusRowContent: View {
     let toast: ToastItem
-    let onDismiss: () -> Void
 
-    public init(toast: ToastItem, onDismiss: @escaping () -> Void) {
-        self.toast = toast
-        self.onDismiss = onDismiss
-    }
-
-    public var body: some View {
-        toastContent
+    var body: some View {
+        Text("\(Image(systemName: toast.symbol)) \(toast.message)")
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, Brand.Space.lg)
-            .frame(maxWidth: 360)
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isStaticText)
+            .padding(.vertical, Brand.Space.xs)
+            .background(.thinMaterial)
+            .transition(.opacity)
     }
+}
 
-    @ContentBuilder
-    private var toastContent: some View {
-        if #available(iOS 26.0, *) {
-            toastBody
-                .padding(.horizontal, Brand.Space.lg)
-                .padding(.vertical, Brand.Space.md)
-                .glassEffect(.regular.tint(toast.style.tint.opacity(0.65)).interactive())
-        } else {
-            toastBody
-                .padding(.horizontal, Brand.Space.lg)
-                .padding(.vertical, Brand.Space.md)
-                .background(Capsule(style: .continuous).fill(.ultraThinMaterial))
-                .overlay(Capsule(style: .continuous).strokeBorder(.quaternary))
-                .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
-        }
-    }
+private struct StatusRowModifier: ViewModifier {
+    @Environment(ToastManager.self) private var status: ToastManager?
 
-    private var toastBody: some View {
-        HStack(spacing: Brand.Space.md) {
-            Image(systemName: toast.icon ?? toast.style.iconName)
-                .font(.title3)
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(toast.style.tint)
-                .accessibilityHidden(true)
-
-            Text(toast.message)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.primary)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-
-            Spacer(minLength: 0)
-
-            Button {
-                Haptics.lightImpact()
-                onDismiss()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
-                    .padding(6)
-                    .background(Circle().fill(.quaternary))
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .top, spacing: 0) {
+            if let toast = status?.currentToast {
+                StatusRowContent(toast: toast)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text("Dismiss"))
         }
     }
 }
 
-// MARK: - Toast Container Modifier
+// MARK: - Subtitle
 
-public struct ToastContainerModifier: ViewModifier {
-    @Environment(ToastManager.self) private var toastManager
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+private struct StatusSubtitleModifier: ViewModifier {
+    let subtitle: String
+    @Environment(ToastManager.self) private var status: ToastManager?
 
-    public init() {}
-
-    public func body(content: Content) -> some View {
-        content
-            .overlay(alignment: horizontalSizeClass == .regular ? .topLeading : .top) {
-                if let toast = toastManager.currentToast {
-                    ToastView(toast: toast) {
-                        toastManager.dismiss()
-                    }
-                    .id(toast.id)
-                    .padding(.top, Brand.Space.sm)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .zIndex(999)
-                }
-            }
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.navigationSubtitle(Text(verbatim: status?.currentToast?.message ?? subtitle))
+        } else {
+            content.modifier(StatusRowModifier())
+        }
     }
 }
 
 extension View {
-    public func toastContainer() -> some View {
-        modifier(ToastContainerModifier())
+    /// The current status in this screen's navigation subtitle (iOS 26+), else a slim row
+    /// under the bar; `subtitle` shows when there is no status.
+    func statusSubtitle(replacing subtitle: String) -> some View {
+        modifier(StatusSubtitleModifier(subtitle: subtitle))
+    }
+
+    /// For navigation screens with no subtitle of their own.
+    public func statusSubtitle() -> some View {
+        modifier(StatusSubtitleModifier(subtitle: ""))
     }
 }
 
 #if DEBUG
-#Preview("Toast Styles") {
+#Preview("Status") {
     struct PreviewContainer: View {
         @State private var toastManager = ToastManager()
 
         var body: some View {
-            VStack(spacing: 20) {
-                Button("Show Success") { toastManager.showSuccess("Migraine saved") }
-                Button("Show Info") { toastManager.show(message: "Syncing with iCloud…", style: .info, icon: "icloud.fill") }
-                Button("Show Error") { toastManager.show(message: "Something went wrong", style: .error) }
+            NavigationStack {
+                VStack(spacing: 20) {
+                    Button("Show Success") { toastManager.showSuccess("Migraine saved") }
+                    Button("Show Info") { toastManager.show(message: "Syncing with iCloud…", style: .info, icon: "icloud.fill") }
+                    Button("Show Error") { toastManager.show(message: "Something went wrong", style: .error) }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .navigationTitle("Status")
+                .statusSubtitle()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .toastContainer()
             .environment(toastManager)
         }
     }

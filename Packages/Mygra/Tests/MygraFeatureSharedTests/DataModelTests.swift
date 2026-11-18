@@ -144,7 +144,7 @@ struct MigraineDataModelTests {
         let toastManager = ToastManager()
         let model = makeMigraineData(repository: PreviewMigraineRepository(), toastManager: toastManager, log: FailingLog())
         #expect(model.log(Migraine(startDate: Date(), painLevel: 1, stressLevel: 1)) == false)
-        #expect(toastManager.currentToast?.style == .error)
+        #expect(toastManager.currentAlert?.style == .error)
     }
 
     @Test("logging a migraine never asks for a rating, however many exist")
@@ -290,7 +290,7 @@ struct TagAndUserDataModelTests {
         )
         #expect(model.currentUser == nil)
         model.update { $0.name = "x" }
-        #expect(toastManager.currentToast?.style == .error)
+        #expect(toastManager.currentAlert?.style == .error)
 
         model.save(User(name: "Nick"))
         model.refresh()

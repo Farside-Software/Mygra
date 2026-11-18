@@ -62,6 +62,7 @@ struct MainView: View {
                 NavigationStack(path: $navigation.dashboardPath) {
                     DashboardView()
                         .navigationTitle("Mygra")
+                        .statusSubtitle()
                         .newMigraineToolbarIfNeeded(self)
                         .navigationDestination(for: UUID.self, destination: migraineDestination)
                 }
@@ -91,6 +92,7 @@ struct MainView: View {
                     NavigationStack(path: $navigation.settingsPath) {
                         SettingsView()
                             .navigationTitle(AppTab.settings.title)
+                            .statusSubtitle()
                             .navigationDestination(for: SettingsDestination.self) { SettingsDestinationView(destination: $0) }
                     }
                 }
