@@ -2,12 +2,12 @@
 //  DashboardView.swift
 //  MygraFeatureDashboard
 //
-//  Weather, the assistant entry, Quick Bits, and today's Health stats with Quick Add (a
-//  single compact row until Health is connected, so insights always lead).
-//  The assistant and Quick Bits are Mygra Plus; free users see locked cards that open
-//  the paywall with the feature as context.
-//  Cards stack on iPhone and flow into two balanced columns at regular widths (iPad
-//  windows, Mac), so a resized window never shows a single stretched column.
+//  The free statistic cards (this month, the last 30 days, what was logged most, start-time
+//  counts; a welcome card until something is logged), weather, and today's Health stats
+//  with Quick Add. Quick Bits and the assistant are Mygra Plus: Plus users get the cards,
+//  free users one compact teaser that opens the paywall.
+//  Cards stack on iPhone and the folded Duo and flow into two equal columns at regular
+//  widths and on the unfolded Duo, where a wider gap keeps the hinge between them.
 //
 
 #if os(iOS)
@@ -34,7 +34,13 @@ public struct DashboardView: View {
 
     public init() {}
 
-    private var isRegularWidth: Bool { horizontalSizeClass == .regular }
+    @State private var layout = LayoutProbe()
+
+    /// Two columns on regular widths (iPad, Mac) and wherever a fold divides the screen
+    /// (the unfolded iPhone Duo); one stack on iPhone and the folded Duo.
+    private var isWide: Bool {
+        horizontalSizeClass == .regular || layout.isFoldActive || (layout.hasFold && layout.width >= 600)
+    }
 
     public var body: some View {
         ScrollViewReader { proxy in
@@ -51,39 +57,43 @@ public struct DashboardView: View {
     }
 
     private var scrollContent: some View {
-        ScrollView {
+        let summary = DashboardSummary(migraineData.migraines)
+        return ScrollView {
             VStack(alignment: .leading, spacing: Brand.Space.lg) {
                 StreakHeaderView(recency: MigraineRecency.of(migraineData.migraines, hasOngoing: migraineData.ongoingMigraine != nil), total: migraineData.migraines.count)
 
                 FinishLoggingCard()
 
-                if isRegularWidth {
-                    HStack(alignment: .top, spacing: Brand.Space.lg) {
+                if isWide {
+                    DashboardTwoColumns(spacing: layout.isFoldActive ? Brand.Space.xxl * 2 : Brand.Space.lg) {
                         VStack(spacing: Brand.Space.lg) {
                             MedicationOveruseCard()
+                            statisticCards(summary, first: true)
                             weatherCard
-                            assistantCard
                         }
                         VStack(spacing: Brand.Space.lg) {
-                            quickBits
+                            statisticCards(summary, first: false)
                             todayCard
+                            plusCards
                         }
                     }
                 } else {
                     MedicationOveruseCard()
+                    statisticCards(summary, first: true)
+                    statisticCards(summary, first: false)
                     weatherCard
-                    assistantCard
-                    quickBits
                     todayCard
+                    plusCards
                 }
 
                 Color.clear.frame(height: Brand.Space.md)
             }
-            .frame(maxWidth: 1000)
+            .frame(maxWidth: layout.isFoldActive ? .infinity : 1000)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, Brand.Space.lg)
             .padding(.top, Brand.Space.sm)
         }
+        .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
         .softScrollEdgesIfAvailable()
         .refreshable {
             await refreshAll()
@@ -122,6 +132,54 @@ public struct DashboardView: View {
         .id("pressure")
     }
 
+    /// The statistic cards computed from the migraine log, free for everyone. `first` is the
+    /// left column on wide layouts (this month, last 30 days); the rest follow on the right.
+    @ContentBuilder
+    private func statisticCards(_ summary: DashboardSummary, first: Bool) -> some View {
+        if summary.isEmpty {
+            if first { DashboardWelcomeCard() }
+        } else if first {
+            MonthGlanceCard(summary: summary, now: Date())
+            LastThirtyDaysCard(summary: summary)
+        } else {
+            if !summary.topTriggers.isEmpty || !summary.topMedications.isEmpty {
+                MostLoggedCard(summary: summary)
+            }
+            if summary.hasPatterns {
+                StartPatternsCard(summary: summary)
+            }
+        }
+    }
+
+    /// Plus users get the real cards; free users get one compact teaser, not a locked
+    /// card per feature.
+    @ContentBuilder
+    private var plusCards: some View {
+        quickBits
+        assistantCard
+        plusTeaser
+    }
+
+    @ContentBuilder
+    private var plusTeaser: some View {
+        let locked = lockedPlusFeatures
+        if !locked.isEmpty {
+            PlusTeaserRow(features: locked) {
+                Haptics.lightImpact()
+                paywall.present(locked[0])
+            }
+        }
+    }
+
+    private var lockedPlusFeatures: [PlusFeature] {
+        var locked: [PlusFeature] = []
+        if !insights.canViewQuickBits { locked.append(.quickBits) }
+        if #available(iOS 26.0, *), insights.supportsAppleIntelligence, !insights.canUseIntelligence {
+            locked.insert(.assistant, at: 0)
+        }
+        return locked
+    }
+
     @ContentBuilder
     private var assistantCard: some View {
         if #available(iOS 26.0, *) {
@@ -131,11 +189,6 @@ public struct DashboardView: View {
                         Haptics.lightImpact()
                         viewModel.isShowingAssistant = true
                         Task { await insights.startChat() }
-                    }
-                } else {
-                    PlusLockedCard(feature: .assistant) {
-                        Haptics.lightImpact()
-                        paywall.present(.assistant)
                     }
                 }
             }
@@ -180,11 +233,6 @@ public struct DashboardView: View {
                 insights.refresh()
             }
             .id("cycle")
-        } else {
-            PlusLockedCard(feature: .quickBits) {
-                Haptics.lightImpact()
-                paywall.present(.quickBits)
-            }
         }
     }
 
