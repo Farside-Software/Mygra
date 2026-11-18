@@ -31,13 +31,13 @@ struct MygraShortcuts: AppShortcutsProvider {
             systemImageName: "checkmark.circle"
         )
         AppShortcut(
-            intent: DaysSinceLastMigraineIntent(),
+            intent: LastMigraineIntent(),
             phrases: [
                 "How long since my last migraine in \(.applicationName)",
                 "When was my last migraine in \(.applicationName)",
                 "Days since my last migraine in \(.applicationName)",
             ],
-            shortTitle: "Days Since Last Migraine",
+            shortTitle: "Last Migraine",
             systemImageName: "calendar"
         )
         AppShortcut(
@@ -68,5 +68,44 @@ struct MygraShortcuts: AppShortcutsProvider {
             shortTitle: "Log a Migraine",
             systemImageName: "plus.circle"
         )
+        AppShortcut(
+            intent: CountMigrainesIntent(),
+            phrases: [
+                "How many migraines have I had \(\.$period) in \(.applicationName)",
+                "How many migraines have I had in \(.applicationName)",
+                "Count my migraines in \(.applicationName)",
+            ],
+            shortTitle: "Count Migraines",
+            systemImageName: "number"
+        )
+        AppShortcut(
+            intent: LogMedicationIntent(),
+            phrases: [
+                "Log medication in \(.applicationName)",
+                "I took my medicine in \(.applicationName)",
+            ],
+            shortTitle: "Log Medication",
+            systemImageName: "pills"
+        )
+        AppShortcut(
+            intent: LogTriggerIntent(),
+            phrases: [
+                "Log \(\.$trigger) as a trigger in \(.applicationName)",
+                "Log a trigger in \(.applicationName)",
+            ],
+            shortTitle: "Log Trigger",
+            systemImageName: "bolt"
+        )
+        if #available(iOS 26.0, *) {
+            AppShortcut(
+                intent: ShowMigraineSummaryIntent(),
+                phrases: [
+                    "Show my migraine summary in \(.applicationName)",
+                    "Migraine summary in \(.applicationName)",
+                ],
+                shortTitle: "Migraine Summary",
+                systemImageName: "rectangle.and.text.magnifyingglass"
+            )
+        }
     }
 }

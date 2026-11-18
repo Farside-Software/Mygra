@@ -18,7 +18,6 @@ public struct MigraineAssistantView: View {
     @Environment(PaywallPresenter.self) private var paywall
 
     @State private var inputText = ""
-    @State private var lastMessageID: String?
     @State private var lastConversationCount = 0
 
     public init() {}
@@ -29,8 +28,15 @@ public struct MigraineAssistantView: View {
         !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isBusy
     }
 
+    /// Messages to draw: the reply being streamed is empty until its first words arrive,
+    /// and the typing indicator stands in for it.
     private var visibleMessages: [ChatMessage] {
-        insights.conversation.filter { $0.role != .system }
+        insights.conversation.filter { $0.role != .system && !$0.content.isEmpty }
+    }
+
+    /// Starter questions show until the person has said something.
+    private var showsStarters: Bool {
+        !isBusy && !visibleMessages.contains { $0.role == .user }
     }
 
     public var body: some View {
@@ -103,10 +109,13 @@ public struct MigraineAssistantView: View {
                             ChatBubble(message: message)
                                 .id(messageID(for: index, message: message))
                                 .padding(.horizontal, 12)
-                                .onAppear { lastMessageID = messageID(for: index, message: message) }
                         }
 
-                        if isBusy {
+                        if showsStarters {
+                            starters
+                        }
+
+                        if insights.isAwaitingFirstToken || (insights.isGeneratingGuidance && !insights.isSending) {
                             HStack {
                                 TypingIndicator()
                                     .padding(10)
@@ -117,14 +126,14 @@ public struct MigraineAssistantView: View {
                             .transition(.opacity)
                         }
 
-                        Color.clear.frame(height: 8)
+                        Color.clear.frame(height: 8).id(Self.bottomID)
                     }
                     .padding(.top, 8)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { Haptics.lightImpact() }
                 .onChange(of: insights.conversation) { _, _ in
-                    scrollToBottom(proxy: proxy)
+                    scrollToBottom(proxy: proxy, animated: !insights.isSending)
                 }
                 .onChange(of: isBusy) { wasBusy, nowBusy in
                     scrollToBottom(proxy: proxy)
@@ -210,20 +219,51 @@ public struct MigraineAssistantView: View {
         .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
     }
 
-    private func send() {
-        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+    private var starters: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Try asking")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.secondary)
+            ForEach(insights.starterQuestions, id: \.self) { question in
+                Button {
+                    Haptics.lightImpact()
+                    send(question)
+                } label: {
+                    Text(question)
+                        .font(.subheadline)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.roundedRectangle(radius: 14))
+                .tint(.mygraBlue)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 4)
+    }
+
+    private func send(_ text: String? = nil) {
+        let text = (text ?? inputText).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !isBusy else { return }
         inputText = ""
         Task { await insights.send(text) }
     }
 
+    /// Stable per row, so a reply that grows while streaming keeps its identity.
     private func messageID(for index: Int, message: ChatMessage) -> String {
-        "\(index)-\(message.role.rawValue)-\(message.content.hashValue)"
+        "\(index)-\(message.role.rawValue)"
     }
 
-    private func scrollToBottom(proxy: ScrollViewProxy) {
-        withAnimation(.easeOut(duration: 0.25)) {
-            proxy.scrollTo(lastMessageID ?? "assistantHeader", anchor: .bottom)
+    private static let bottomID = "assistantBottom"
+
+    private func scrollToBottom(proxy: ScrollViewProxy, animated: Bool = true) {
+        if animated {
+            withAnimation(.easeOut(duration: 0.25)) {
+                proxy.scrollTo(Self.bottomID, anchor: .bottom)
+            }
+        } else {
+            proxy.scrollTo(Self.bottomID, anchor: .bottom)
         }
     }
 }

@@ -190,6 +190,170 @@
           }
         }
       }
+    },
+    "How many migraines have I had ${period} in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "How many migraines have I had ${period} in ${applicationName}",
+              "How many migraines have I had in ${applicationName}",
+              "Count my migraines in ${applicationName}"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Cuántas migrañas he tenido ${period} en ${applicationName}",
+              "Cuántas migrañas he tenido en ${applicationName}",
+              "Cuenta mis migrañas en ${applicationName}"
+            ]
+          }
+        },
+        "fr-CA": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Combien de migraines ai-je eues ${period} dans ${applicationName}",
+              "Combien de migraines ai-je eues dans ${applicationName}",
+              "Compter mes migraines dans ${applicationName}"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}で${period}の片頭痛は何回",
+              "片頭痛は何回あったか ${applicationName}で教えて",
+              "${applicationName}で片頭痛を数える"
+            ]
+          }
+        }
+      }
+    },
+    "Log medication in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Log medication in ${applicationName}",
+              "I took my medicine in ${applicationName}"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Registrar medicación en ${applicationName}",
+              "Tomé mi medicina en ${applicationName}"
+            ]
+          }
+        },
+        "fr-CA": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Noter un médicament dans ${applicationName}",
+              "J’ai pris mon médicament dans ${applicationName}"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}で薬を記録",
+              "薬を飲んだ ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Log ${trigger} as a trigger in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Log ${trigger} as a trigger in ${applicationName}",
+              "Log a trigger in ${applicationName}"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Registrar ${trigger} como desencadenante en ${applicationName}",
+              "Registrar un desencadenante en ${applicationName}"
+            ]
+          }
+        },
+        "fr-CA": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Noter ${trigger} comme déclencheur dans ${applicationName}",
+              "Noter un déclencheur dans ${applicationName}"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}で${trigger}を誘因として記録",
+              "${applicationName}で誘因を記録"
+            ]
+          }
+        }
+      }
+    },
+    "Show my migraine summary in ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Show my migraine summary in ${applicationName}",
+              "Migraine summary in ${applicationName}"
+            ]
+          }
+        },
+        "es": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Muestra mi resumen de migrañas en ${applicationName}",
+              "Resumen de migrañas en ${applicationName}"
+            ]
+          }
+        },
+        "fr-CA": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "Afficher mon résumé de migraines dans ${applicationName}",
+              "Résumé des migraines dans ${applicationName}"
+            ]
+          }
+        },
+        "ja": {
+          "stringSet": {
+            "state": "translated",
+            "values": [
+              "${applicationName}で片頭痛のまとめを表示",
+              "${applicationName}の片頭痛まとめ"
+            ]
+          }
+        }
+      }
     }
   },
   "version": "1.0"
