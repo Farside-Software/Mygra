@@ -144,6 +144,7 @@ struct EndMigraineIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         if try session.endOngoingMigraine() {
+            if #available(iOS 26.0, *) { MigraineSummarySnippetIntent.reload() }
             return .result(dialog: "Marked your migraine as ended.")
         }
         return .result(dialog: "You don't have a migraine in progress.")
