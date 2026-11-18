@@ -38,11 +38,11 @@ private struct TriggerChipFlow: View {
     let labels: [String]
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), spacing: Brand.Space.sm, alignment: .leading)], alignment: .leading, spacing: Brand.Space.sm) {
+        FlowLayout(spacing: Brand.Space.sm, lineSpacing: Brand.Space.sm) {
             ForEach(labels, id: \.self) { label in
                 Text(label)
                     .font(.subheadline)
-                    .lineLimit(1)
+                    .multilineTextAlignment(.leading)
                     .padding(.horizontal, Brand.Space.md)
                     .padding(.vertical, 6)
                     .background(Capsule(style: .continuous).fill(Color.mygraPurple.opacity(0.14)))
