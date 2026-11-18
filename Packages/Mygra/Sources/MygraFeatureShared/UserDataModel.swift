@@ -20,7 +20,7 @@ public final class UserDataModel {
     @ObservationIgnored private let updateUserUseCase: any UpdateUser
     @ObservationIgnored private let deleteUserUseCase: any DeleteUser
     @ObservationIgnored private let observeChanges: any ObserveMigraineChanges
-    @ObservationIgnored private let toastManager: ToastManager
+    @ObservationIgnored private let statusCenter: StatusCenter
 
     /// The current profile, or nil before onboarding completes.
     public private(set) var currentUser: User?
@@ -33,14 +33,14 @@ public final class UserDataModel {
         updateUser: any UpdateUser,
         deleteUser: any DeleteUser,
         observeChanges: any ObserveMigraineChanges,
-        toastManager: ToastManager
+        statusCenter: StatusCenter
     ) {
         self.loadUser = loadUser
         self.saveUserUseCase = saveUser
         self.updateUserUseCase = updateUser
         self.deleteUserUseCase = deleteUser
         self.observeChanges = observeChanges
-        self.toastManager = toastManager
+        self.statusCenter = statusCenter
         refresh()
         startObserving()
     }
@@ -67,7 +67,7 @@ public final class UserDataModel {
             currentUser = try loadUser()
         } catch {
             Log.user.error("User refresh failed: \(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
         }
     }
 
@@ -97,7 +97,7 @@ public final class UserDataModel {
             refresh()
         } catch {
             Log.user.error("\(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
         }
     }
 }

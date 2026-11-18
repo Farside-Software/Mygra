@@ -23,7 +23,7 @@ public final class TagDataModel {
     @ObservationIgnored private let reorderTagsUseCase: any ReorderTags
     @ObservationIgnored private let assignTagsUseCase: any AssignTags
     @ObservationIgnored private let observeChanges: any ObserveMigraineChanges
-    @ObservationIgnored private let toastManager: ToastManager
+    @ObservationIgnored private let statusCenter: StatusCenter
 
     /// Every tag in user order.
     public private(set) var tags: [MigraineTag] = []
@@ -38,7 +38,7 @@ public final class TagDataModel {
         reorderTags: any ReorderTags,
         assignTags: any AssignTags,
         observeChanges: any ObserveMigraineChanges,
-        toastManager: ToastManager
+        statusCenter: StatusCenter
     ) {
         self.loadTags = loadTags
         self.createTagUseCase = createTag
@@ -47,7 +47,7 @@ public final class TagDataModel {
         self.reorderTagsUseCase = reorderTags
         self.assignTagsUseCase = assignTags
         self.observeChanges = observeChanges
-        self.toastManager = toastManager
+        self.statusCenter = statusCenter
         refresh()
         startObserving()
     }
@@ -74,7 +74,7 @@ public final class TagDataModel {
             tags = try loadTags()
         } catch {
             Log.migraine.error("Tag refresh failed: \(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
         }
     }
 
@@ -108,7 +108,7 @@ public final class TagDataModel {
             return result
         } catch {
             Log.migraine.error("\(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
             return fallback
         }
     }

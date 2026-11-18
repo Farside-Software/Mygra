@@ -275,8 +275,8 @@ public struct MigraineEntryView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.vertical, Brand.Space.md)
         .background(Capsule().fill(.thinMaterial))
     }
 
@@ -309,8 +309,8 @@ public struct MigraineEntryView: View {
                 .padding(.top, 2)
                 .padding(.leading, 5)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, Brand.Space.lg)
+        .padding(.vertical, Brand.Space.md)
         .background(Capsule().fill(.thinMaterial))
     }
 

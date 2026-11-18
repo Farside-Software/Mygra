@@ -1,8 +1,8 @@
 //
-//  Toast.swift
+//  StatusCenter.swift
 //  MygraDesignSystem
 //
-//  Quiet, inline status feedback, as in Opalite 2.0. `ToastManager` (the name predates the
+//  Quiet, inline status feedback, as in Opalite 2.0. `StatusCenter` (formerly the toast manager; the name predates the
 //  design) routes success and info items to `currentToast`, which the screen's navigation
 //  subtitle shows for a few seconds (iOS 26+; before that a slim row under the navigation
 //  bar), and errors to `currentAlert`, which is presented as a standard system alert over
@@ -17,7 +17,7 @@ import UIKit
 
 // MARK: - Style
 
-public enum ToastStyle: Sendable, Equatable {
+public enum StatusStyle: Sendable, Equatable {
     case error
     case success
     case info
@@ -33,14 +33,14 @@ public enum ToastStyle: Sendable, Equatable {
 
 // MARK: - Item
 
-public struct ToastItem: Identifiable, Equatable {
+public struct StatusItem: Identifiable, Equatable {
     public let id = UUID()
     public let message: String
-    public let style: ToastStyle
+    public let style: StatusStyle
     public let icon: String?
     public let duration: TimeInterval
 
-    public init(message: String, style: ToastStyle = .info, icon: String? = nil, duration: TimeInterval = 3.0) {
+    public init(message: String, style: StatusStyle = .info, icon: String? = nil, duration: TimeInterval = 3.0) {
         self.message = message
         self.style = style
         self.icon = icon
@@ -49,24 +49,24 @@ public struct ToastItem: Identifiable, Equatable {
 
     public var symbol: String { icon ?? style.iconName }
 
-    public static func == (lhs: ToastItem, rhs: ToastItem) -> Bool { lhs.id == rhs.id }
+    public static func == (lhs: StatusItem, rhs: StatusItem) -> Bool { lhs.id == rhs.id }
 }
 
 // MARK: - Manager
 
 @MainActor
 @Observable
-public final class ToastManager {
+public final class StatusCenter {
     /// The status shown in the navigation subtitle (or the iOS 18 row): success and info only.
-    public private(set) var currentToast: ToastItem?
+    public private(set) var currentToast: StatusItem?
     /// The latest error, kept until acknowledged in the system alert.
-    public private(set) var currentAlert: ToastItem?
+    public private(set) var currentAlert: StatusItem?
     @ObservationIgnored private var dismissTask: Task<Void, Never>?
 
     public init() {}
 
     /// Errors become an alert; everything else a transient status line.
-    public func show(_ toast: ToastItem) {
+    public func show(_ toast: StatusItem) {
         if toast.style == .error {
             currentAlert = toast
             presentAlert(toast)
@@ -82,17 +82,17 @@ public final class ToastManager {
         }
     }
 
-    public func show(message: String, style: ToastStyle = .info, icon: String? = nil) {
-        show(ToastItem(message: message, style: style, icon: icon))
+    public func show(message: String, style: StatusStyle = .info, icon: String? = nil) {
+        show(StatusItem(message: message, style: style, icon: icon))
     }
 
     public func showSuccess(_ message: String) {
-        show(ToastItem(message: message, style: .success))
+        show(StatusItem(message: message, style: .success))
     }
 
     public func show(error: any Error) {
         let message = (error as? any LocalizedError)?.errorDescription ?? error.localizedDescription
-        show(ToastItem(message: message, style: .error))
+        show(StatusItem(message: message, style: .error))
     }
 
     /// Clears the status (not a pending alert).
@@ -112,7 +112,7 @@ public final class ToastManager {
 
     /// Presents a standard alert on the top-most view controller, so it shows over sheets
     /// and full-screen covers too. A second error replaces the one on screen.
-    private func presentAlert(_ item: ToastItem) {
+    private func presentAlert(_ item: StatusItem) {
         guard let top = Self.topViewController() else { return }
         if let presentedAlert, presentedAlert.presentingViewController != nil {
             presentedAlert.title = item.message
@@ -136,7 +136,7 @@ public final class ToastManager {
         return top
     }
     #else
-    private func presentAlert(_ item: ToastItem) {}
+    private func presentAlert(_ item: StatusItem) {}
     #endif
 }
 
@@ -145,7 +145,7 @@ public final class ToastManager {
 // MARK: - Status row (before iOS 26)
 
 private struct StatusRowContent: View {
-    let toast: ToastItem
+    let toast: StatusItem
 
     var body: some View {
         Text("\(Image(systemName: toast.symbol)) \(toast.message)")
@@ -162,7 +162,7 @@ private struct StatusRowContent: View {
 }
 
 private struct StatusRowModifier: ViewModifier {
-    @Environment(ToastManager.self) private var status: ToastManager?
+    @Environment(StatusCenter.self) private var status: StatusCenter?
 
     func body(content: Content) -> some View {
         content.safeAreaInset(edge: .top, spacing: 0) {
@@ -177,7 +177,7 @@ private struct StatusRowModifier: ViewModifier {
 
 private struct StatusSubtitleModifier: ViewModifier {
     let subtitle: String
-    @Environment(ToastManager.self) private var status: ToastManager?
+    @Environment(StatusCenter.self) private var status: StatusCenter?
 
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
@@ -204,20 +204,20 @@ extension View {
 #if DEBUG
 #Preview("Status") {
     struct PreviewContainer: View {
-        @State private var toastManager = ToastManager()
+        @State private var statusCenter = StatusCenter()
 
         var body: some View {
             NavigationStack {
                 VStack(spacing: 20) {
-                    Button("Show Success") { toastManager.showSuccess("Migraine saved") }
-                    Button("Show Info") { toastManager.show(message: "Syncing with iCloud…", style: .info, icon: "icloud.fill") }
-                    Button("Show Error") { toastManager.show(message: "Something went wrong", style: .error) }
+                    Button("Show Success") { statusCenter.showSuccess("Migraine saved") }
+                    Button("Show Info") { statusCenter.show(message: "Syncing with iCloud…", style: .info, icon: "icloud.fill") }
+                    Button("Show Error") { statusCenter.show(message: "Something went wrong", style: .error) }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .navigationTitle("Status")
                 .statusSubtitle()
             }
-            .environment(toastManager)
+            .environment(statusCenter)
         }
     }
     return PreviewContainer()

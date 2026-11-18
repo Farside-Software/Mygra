@@ -54,7 +54,7 @@ struct WeatherCardView: View {
     }
 
     private func currentConditions(_ reading: WeatherReading) -> some View {
-        HStack(spacing: 15) {
+        HStack(spacing: Brand.Space.lg) {
             reading.condition.symbolView()
                 .font(.title)
                 .symbolEffect(.bounce, options: .repeat(1), value: bounceFlag)

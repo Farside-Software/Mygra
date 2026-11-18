@@ -19,7 +19,7 @@ public struct SettingsView: View {
     @Environment(UserDataModel.self) private var userData
     @Environment(MigraineDataModel.self) private var migraineData
     @Environment(CloudSyncManager.self) private var cloudSync
-    @Environment(ToastManager.self) private var toastManager
+    @Environment(StatusCenter.self) private var statusCenter
     @Environment(SubscriptionManager.self) private var subscription
     @Environment(PaywallPresenter.self) private var paywall
     @Environment(AttackModeModel.self) private var attackMode
@@ -571,12 +571,12 @@ public struct SettingsView: View {
         await subscription.restorePurchases()
         if let error = subscription.error {
             Haptics.error()
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
         } else if subscription.hasPlus {
             Haptics.success()
-            toastManager.showSuccess(String(localized: "Mygra Plus restored"))
+            statusCenter.showSuccess(String(localized: "Mygra Plus restored"))
         } else {
-            toastManager.show(message: String(localized: "No previous purchase was found."), style: .info)
+            statusCenter.show(message: String(localized: "No previous purchase was found."), style: .info)
         }
     }
 
@@ -591,7 +591,7 @@ public struct SettingsView: View {
             try? await Task.sleep(for: .seconds(remaining))
             Haptics.success()
             viewModel.showingFarewell = false
-            toastManager.showSuccess(String(localized: "All migraines deleted"))
+            statusCenter.showSuccess(String(localized: "All migraines deleted"))
         }
     }
 }

@@ -97,11 +97,11 @@ struct QuickBitsSectionView: View {
                     Text(failure.errorDescription ?? "").font(.footnote)
                     Spacer()
                 }
-                .padding(8)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                .padding(Brand.Space.sm)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Brand.Radius.chip))
             }
         }
-        .padding(14)
+        .padding(Brand.Space.lg)
         .cardSurface()
     }
 
@@ -231,8 +231,8 @@ private struct QuickBitExplanationBubble: View {
                     .transition(.scale.combined(with: .opacity))
                 }
             }
-            .padding(8)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+            .padding(Brand.Space.sm)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Brand.Radius.chip))
         }
     }
 }

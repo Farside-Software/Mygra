@@ -13,7 +13,7 @@ struct IntelligenceCardView: View {
     let onOpen: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 15) {
+        HStack(alignment: .center, spacing: Brand.Space.lg) {
             AppleIntelligenceSymbol()
                 .font(.title)
 
@@ -34,7 +34,7 @@ struct IntelligenceCardView: View {
             .hoverHighlight()
             .accessibilityLabel("Open Migraine Assistant")
         }
-        .padding(16)
+        .padding(Brand.Space.lg)
         .cardSurface()
         .accessibilityElement(children: .combine)
     }
@@ -46,7 +46,7 @@ struct IntelligenceUpgradeCardView: View {
     }
 
     var body: some View {
-        HStack(spacing: 15) {
+        HStack(spacing: Brand.Space.lg) {
             Image(systemName: "sparkles")
                 .font(.title)
                 .foregroundStyle(.yellow)
@@ -63,7 +63,7 @@ struct IntelligenceUpgradeCardView: View {
             .layoutPriority(1)
             Spacer()
         }
-        .padding(14)
+        .padding(Brand.Space.lg)
         .cardSurface()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Apple Intelligence. Update to \(platformName) to access these features.")

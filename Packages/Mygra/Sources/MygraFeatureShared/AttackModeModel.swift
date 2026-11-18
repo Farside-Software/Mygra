@@ -29,7 +29,7 @@ public final class AttackModeModel: AttackModeActions {
     @ObservationIgnored private let endUseCase: any EndAttack
     @ObservationIgnored private let coordinator: FinishLoggingCoordinator
     @ObservationIgnored private let observeChanges: any ObserveMigraineChanges
-    @ObservationIgnored private let toastManager: ToastManager
+    @ObservationIgnored private let statusCenter: StatusCenter
     @ObservationIgnored private var observationTask: Task<Void, Never>?
 
     // MARK: - State
@@ -51,7 +51,7 @@ public final class AttackModeModel: AttackModeActions {
         endAttack: any EndAttack,
         coordinator: FinishLoggingCoordinator,
         observeChanges: any ObserveMigraineChanges,
-        toastManager: ToastManager
+        statusCenter: StatusCenter
     ) {
         self.migraineData = migraineData
         self.startUseCase = startAttack
@@ -60,7 +60,7 @@ public final class AttackModeModel: AttackModeActions {
         self.endUseCase = endAttack
         self.coordinator = coordinator
         self.observeChanges = observeChanges
-        self.toastManager = toastManager
+        self.statusCenter = statusCenter
         reconcile()
         startObserving()
     }
@@ -125,7 +125,7 @@ public final class AttackModeModel: AttackModeActions {
             started = try startUseCase()
         } catch {
             Log.migraine.error("Attack start failed: \(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
             return nil
         }
         guard let started else { return nil }
@@ -153,7 +153,7 @@ public final class AttackModeModel: AttackModeActions {
             ended = try endUseCase(at: Date())
         } catch {
             Log.migraine.error("Attack end failed: \(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
             return false
         }
         guard let ended else { return false }
@@ -191,7 +191,7 @@ public final class AttackModeModel: AttackModeActions {
             return done
         } catch {
             Log.migraine.error("Attack action failed: \(error.localizedDescription)")
-            toastManager.show(error: error)
+            statusCenter.show(error: error)
             return false
         }
     }

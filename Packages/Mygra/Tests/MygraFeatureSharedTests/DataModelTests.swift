@@ -41,7 +41,7 @@ private struct FailingLog: LogMigraine {
 @MainActor
 private func makeMigraineData(
     repository: PreviewMigraineRepository,
-    toastManager: ToastManager = ToastManager(),
+    statusCenter: StatusCenter = StatusCenter(),
     reviewRequester: (any ReviewRequesting)? = nil,
     defaults: any KeyValueStoring = FakeKeyValueStore(),
     now: @escaping () -> Date = Date.init,
@@ -68,7 +68,7 @@ private func makeMigraineData(
         defaults: defaults,
         appVersion: "1.0",
         now: now,
-        toastManager: toastManager
+        statusCenter: statusCenter
     )
 }
 
@@ -141,10 +141,10 @@ struct MigraineDataModelTests {
 
     @Test("failures surface as error toasts, never silently")
     func failuresToast() {
-        let toastManager = ToastManager()
-        let model = makeMigraineData(repository: PreviewMigraineRepository(), toastManager: toastManager, log: FailingLog())
+        let statusCenter = StatusCenter()
+        let model = makeMigraineData(repository: PreviewMigraineRepository(), statusCenter: statusCenter, log: FailingLog())
         #expect(model.log(Migraine(startDate: Date(), painLevel: 1, stressLevel: 1)) == false)
-        #expect(toastManager.currentAlert?.style == .error)
+        #expect(statusCenter.currentAlert?.style == .error)
     }
 
     @Test("logging a migraine never asks for a rating, however many exist")
@@ -255,7 +255,7 @@ struct TagAndUserDataModelTests {
             reorderTags: ReorderTagsUseCase(repository: repository),
             assignTags: AssignTagsUseCase(repository: repository),
             observeChanges: ObserveMigraineChangesUseCase(center: repository.changeCenter),
-            toastManager: ToastManager()
+            statusCenter: StatusCenter()
         )
         let a = model.create(name: "A")
         model.create(name: "B")
@@ -279,18 +279,18 @@ struct TagAndUserDataModelTests {
 
     @Test func userVerbsRouteAndMissingUserToasts() {
         let repository = PreviewUserRepository()
-        let toastManager = ToastManager()
+        let statusCenter = StatusCenter()
         let model = UserDataModel(
             loadUser: LoadUserUseCase(repository: repository),
             saveUser: SaveUserUseCase(repository: repository),
             updateUser: UpdateUserUseCase(repository: repository),
             deleteUser: DeleteUserUseCase(repository: repository),
             observeChanges: ObserveMigraineChangesUseCase(center: repository.changeCenter),
-            toastManager: toastManager
+            statusCenter: statusCenter
         )
         #expect(model.currentUser == nil)
         model.update { $0.name = "x" }
-        #expect(toastManager.currentAlert?.style == .error)
+        #expect(statusCenter.currentAlert?.style == .error)
 
         model.save(User(name: "Nick"))
         model.refresh()

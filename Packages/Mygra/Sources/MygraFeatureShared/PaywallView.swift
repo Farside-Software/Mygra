@@ -22,7 +22,7 @@ public struct PaywallView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(SubscriptionManager.self) private var subscription
-    @Environment(ToastManager.self) private var toast
+    @Environment(StatusCenter.self) private var toast
 
     @State private var isPurchasingLifetime = false
     @State private var isRestoring = false

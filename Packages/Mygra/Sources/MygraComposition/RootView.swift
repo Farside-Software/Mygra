@@ -37,7 +37,7 @@ public struct RootView: View {
             .environment(session.cycleData)
             .environment(session.insights)
             .environment(session.attackMode)
-            .environment(session.toastManager)
+            .environment(session.statusCenter)
             .environment(session.cloudSyncManager)
             .environment(session.weatherManager)
             .environment(session.notificationManager)
@@ -96,7 +96,7 @@ public struct RootView: View {
     private func handleMainEntry() {
         guard !didShowSyncToast, wasReturningUser, session.cloudSyncManager.isCloudAvailable else { return }
         didShowSyncToast = true
-        session.toastManager.show(message: String(localized: "Syncing with iCloud…"), style: .info, icon: "icloud.fill")
+        session.statusCenter.show(message: String(localized: "Syncing with iCloud…"), style: .info, icon: "icloud.fill")
     }
 }
 #endif

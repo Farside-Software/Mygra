@@ -31,6 +31,8 @@ struct MigraineRowView: View {
                         Text(DateFormatting.compactDateTime(migraine.startDate, useDMY: useDayMonthYearDates))
                             .font(.subheadline.weight(.semibold))
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
 
                     Spacer(minLength: Brand.Space.xs)
