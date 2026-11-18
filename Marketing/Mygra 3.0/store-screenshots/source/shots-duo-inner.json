@@ -1,0 +1,62 @@
+{
+ "shots": {
+  "duo-inner": [
+   {
+    "n": 1,
+    "slug": "01-dashboard",
+    "raw": "raw/duo-inner/01-dashboard.png",
+    "framed": "framed/duo-inner/01-dashboard.png",
+    "caption": [
+     "Your migraines,",
+     "at a glance."
+    ],
+    "captionColors": [
+     "ink",
+     "accent"
+    ]
+   },
+   {
+    "n": 2,
+    "slug": "03-list-detail",
+    "raw": "raw/duo-inner/03-list-detail.png",
+    "framed": "framed/duo-inner/03-list-detail.png",
+    "caption": [
+     "Every attack,",
+     "in detail."
+    ],
+    "captionColors": [
+     "ink",
+     "accent"
+    ]
+   },
+   {
+    "n": 3,
+    "slug": "04-new-migraine",
+    "raw": "raw/duo-inner/04-new-migraine.png",
+    "framed": "framed/duo-inner/04-new-migraine.png",
+    "caption": [
+     "Log an attack",
+     "in seconds."
+    ],
+    "captionColors": [
+     "ink",
+     "accent"
+    ]
+   },
+   {
+    "n": 4,
+    "slug": "02-calendar",
+    "raw": "raw/duo-inner/02-calendar.png",
+    "framed": "framed/duo-inner/02-calendar.png",
+    "caption": [
+     "See the pattern",
+     "take shape."
+    ],
+    "captionColors": [
+     "ink",
+     "accent"
+    ]
+   }
+  ]
+ }
+}

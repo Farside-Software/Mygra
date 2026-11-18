@@ -1,0 +1,34 @@
+{
+ "shots": {
+  "watch": [
+   {
+    "n": 1,
+    "slug": "01-home",
+    "raw": "raw/watch/01-home.png",
+    "framed": "framed/watch/01-home.png",
+    "caption": [
+     "Your streak,",
+     "on your wrist."
+    ],
+    "captionColors": [
+     "ink",
+     "accent"
+    ]
+   },
+   {
+    "n": 2,
+    "slug": "02-attack",
+    "raw": "raw/watch/02-attack.png",
+    "framed": "framed/watch/02-attack.png",
+    "caption": [
+     "Track an attack",
+     "from your wrist."
+    ],
+    "captionColors": [
+     "ink",
+     "accent"
+    ]
+   }
+  ]
+ }
+}

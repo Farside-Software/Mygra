@@ -1,0 +1,329 @@
+{
+  "root": "/Users/nickmolargik/Developer/Molargik Software LLC/Marketing/Mygra 3.0/store-screenshots",
+  "canvas": {
+    "iphone": [
+      1320,
+      2868
+    ],
+    "ipad": [
+      2064,
+      2752
+    ],
+    "duo-outer": [
+      1398,
+      2034
+    ],
+    "duo-unfolded": [
+      2853,
+      2007
+    ]
+  },
+  "backgrounds": {
+    "iphone": "backgrounds/iphone.png",
+    "ipad": "backgrounds/ipad.png",
+    "duo-outer": "backgrounds/duo-outer.png",
+    "duo-unfolded": "backgrounds/duo-unfolded.png"
+  },
+  "shots": {
+    "iphone": [
+      {
+        "n": 1,
+        "slug": "dashboard",
+        "raw": "raw/iphone/01-dashboard.png",
+        "framed": "framed/iphone/01-dashboard.png",
+        "caption": [
+          "Your migraines,",
+          "at a glance."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 2,
+        "slug": "new-migraine",
+        "raw": "raw/iphone/02-new-migraine.png",
+        "framed": "framed/iphone/02-new-migraine.png",
+        "caption": [
+          "Log an attack",
+          "in seconds."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 3,
+        "slug": "calendar",
+        "raw": "raw/iphone/03-calendar.png",
+        "framed": "framed/iphone/03-calendar.png",
+        "caption": [
+          "See the pattern",
+          "take shape."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 4,
+        "slug": "migraine-detail",
+        "raw": "raw/iphone/04-migraine-detail.png",
+        "framed": "framed/iphone/04-migraine-detail.png",
+        "caption": [
+          "Every attack,",
+          "in detail."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 5,
+        "slug": "pressure-cycle",
+        "raw": "raw/iphone/05-pressure-cycle.png",
+        "framed": "framed/iphone/05-pressure-cycle.png",
+        "caption": [
+          "Weather and cycle,",
+          "side by side."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 6,
+        "slug": "live-activity",
+        "raw": "raw/iphone/06-live-activity.png",
+        "framed": "framed/iphone/06-live-activity.png",
+        "caption": [
+          "Track it from",
+          "your Lock Screen."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 7,
+        "slug": "assistant",
+        "raw": "raw/iphone/07-assistant.png",
+        "framed": "framed/iphone/07-assistant.png",
+        "caption": [
+          "Ask about",
+          "your history."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 8,
+        "slug": "report",
+        "raw": "raw/iphone/08-report.png",
+        "framed": "framed/iphone/08-report.png",
+        "caption": [
+          "A clear report",
+          "for your doctor."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      }
+    ],
+    "ipad": [
+      {
+        "n": 1,
+        "slug": "dashboard",
+        "raw": "raw/ipad/01-dashboard.png",
+        "framed": "framed/ipad/01-dashboard.png",
+        "caption": [
+          "Your migraines,",
+          "at a glance."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 2,
+        "slug": "new-migraine",
+        "raw": "raw/ipad/02-new-migraine.png",
+        "framed": "framed/ipad/02-new-migraine.png",
+        "caption": [
+          "Log an attack",
+          "in seconds."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 3,
+        "slug": "calendar",
+        "raw": "raw/ipad/03-calendar.png",
+        "framed": "framed/ipad/03-calendar.png",
+        "caption": [
+          "See the pattern",
+          "take shape."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 4,
+        "slug": "migraine-detail",
+        "raw": "raw/ipad/04-migraine-detail.png",
+        "framed": "framed/ipad/04-migraine-detail.png",
+        "caption": [
+          "Every attack,",
+          "in detail."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 5,
+        "slug": "weather-detail",
+        "raw": "raw/ipad/05-weather-detail.png",
+        "framed": "framed/ipad/05-weather-detail.png",
+        "caption": [
+          "Health and weather,",
+          "recorded for you."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 6,
+        "slug": "ongoing-migraine",
+        "raw": "raw/ipad/06-ongoing-migraine.png",
+        "framed": "framed/ipad/06-ongoing-migraine.png",
+        "caption": [
+          "Track it",
+          "as it happens."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 7,
+        "slug": "assistant",
+        "raw": "raw/ipad/07-assistant.png",
+        "framed": "framed/ipad/07-assistant.png",
+        "caption": [
+          "Ask about",
+          "your history."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 8,
+        "slug": "report",
+        "raw": "raw/ipad/08-report.png",
+        "framed": "framed/ipad/08-report.png",
+        "caption": [
+          "A clear report",
+          "for your doctor."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      }
+    ],
+    "duo-outer": [
+      {
+        "n": 1,
+        "slug": "dashboard",
+        "raw": "raw/duo-outer/01-dashboard.png",
+        "framed": "framed/duo-outer/01-dashboard.png",
+        "caption": [
+          "Your migraines,",
+          "at a glance."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 2,
+        "slug": "new-migraine",
+        "raw": "raw/duo-outer/02-new-migraine.png",
+        "framed": "framed/duo-outer/02-new-migraine.png",
+        "caption": [
+          "Log an attack",
+          "in seconds."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 3,
+        "slug": "calendar",
+        "raw": "raw/duo-outer/03-calendar.png",
+        "framed": "framed/duo-outer/03-calendar.png",
+        "caption": [
+          "See the pattern",
+          "take shape."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 4,
+        "slug": "migraine-detail",
+        "raw": "raw/duo-outer/04-migraine-detail.png",
+        "framed": "framed/duo-outer/04-migraine-detail.png",
+        "caption": [
+          "Every attack,",
+          "in detail."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      },
+      {
+        "n": 6,
+        "slug": "ongoing-migraine",
+        "raw": "raw/duo-outer/06-ongoing-migraine.png",
+        "framed": "framed/duo-outer/06-ongoing-migraine.png",
+        "caption": [
+          "Track it",
+          "as it happens."
+        ],
+        "captionColors": [
+          "ink",
+          "accent"
+        ]
+      }
+    ]
+  }
+}
