@@ -210,6 +210,9 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
         refreshAuthorizationStatus()
     }
 
+    /// False on devices without Health data (some iPads, simulators).
+    public var isAvailable: Bool { type(of: store).isHealthDataAvailable() }
+
     public convenience init() {
         self.init(store: LiveHealthStore())
     }
@@ -258,6 +261,8 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
 
     // MARK: - Authorization
 
+    private static let didRequestKey = "Health.didRequestAuthorization"
+
     public func requestAuthorization() async {
         guard type(of: store).isHealthDataAvailable() else {
             lastError = HealthError.healthDataUnavailable
@@ -267,6 +272,7 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
         }
         do {
             try await store.requestAuthorization(toShare: shareTypes, read: readTypes)
+            UserDefaults.standard.set(true, forKey: Self.didRequestKey)
             updateAuthorizationFlag()
             lastError = nil
         } catch {
@@ -279,8 +285,11 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
     /// Read access is "authorized" once every read type has been decided (HealthKit hides
     /// read denials; `.notDetermined` is the only observable signal).
     private func updateAuthorizationFlag() {
-        let undecided = readTypes.contains { store.authorizationStatus(for: $0) == .notDetermined }
-        isAuthorized = !undecided
+        // `authorizationStatus(for:)` only describes WRITE access, so read-only types
+        // (steps, heart rate, glucose, oxygen) stay `.notDetermined` forever. Judging by
+        // it made every launch look unauthorized and re-prompted. The request outcome is
+        // remembered instead: HealthKit shows its sheet once per type set anyway.
+        isAuthorized = UserDefaults.standard.bool(forKey: Self.didRequestKey)
         Log.health.info("Health authorization flag: \(self.isAuthorized)")
     }
 
@@ -297,11 +306,10 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
     }
 
     private func ensureAuthorized() async throws {
+        // Never prompts: the system sheet comes only from onboarding or an explicit Connect.
+        refreshAuthorizationStatus()
         if !isAuthorized {
-            await requestAuthorization()
-            if !isAuthorized {
-                throw HealthError.authorizationDenied
-            }
+            throw HealthError.authorizationDenied
         }
     }
 
@@ -384,6 +392,7 @@ public final class HealthManager: HeadacheRecording, MenstrualFlowProviding {
         refreshAuthorizationStatus()
         guard isAuthorized else {
             latestData = nil
+            lastError = nil
             return
         }
         do {

@@ -237,6 +237,8 @@ public struct MigraineEntryView: View {
                 ProgressView().controlSize(.small)
             } else if viewModel.healthError != nil {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+            } else if viewModel.healthNotice != nil {
+                Image(systemName: "heart.slash").foregroundStyle(.secondary)
             } else if viewModel.didPullHealth {
                 if zeroMetrics.isEmpty {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green.gradient)
@@ -246,15 +248,25 @@ public struct MigraineEntryView: View {
             }
 
             Text(viewModel.healthStatusText(latest: healthManager.latestData))
-                .foregroundStyle(viewModel.healthError == nil ? .primary : .secondary)
+                .foregroundStyle(viewModel.healthError == nil && viewModel.healthNotice == nil ? .primary : .secondary)
                 .font(.subheadline)
-                .bold(viewModel.healthError != nil)
                 .transition(.opacity)
                 .animation(.easeInOut(duration: 0.2), value: viewModel.startDate)
 
             Spacer(minLength: 0)
 
-            if !viewModel.isPullingHealth && (viewModel.healthError != nil || !zeroMetrics.isEmpty) {
+            if !viewModel.isPullingHealth, viewModel.healthNotice == .notConnected {
+                Button("Connect") {
+                    Haptics.lightImpact()
+                    Task {
+                        await healthManager.requestAuthorization()
+                        await viewModel.startHealthFetch(using: healthManager)
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.mygraBlue)
+            } else if !viewModel.isPullingHealth && (viewModel.healthError != nil || !zeroMetrics.isEmpty) {
                 Button {
                     viewModel.presentHealthInfo(latest: healthManager.latestData)
                 } label: {
@@ -275,6 +287,8 @@ public struct MigraineEntryView: View {
                     ProgressView().controlSize(.small)
                 } else if viewModel.didPullWeather {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                } else if viewModel.weatherNeedsLocation {
+                    Image(systemName: "location.slash").foregroundStyle(.secondary)
                 } else if viewModel.weatherError != nil {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
                 }
@@ -282,7 +296,7 @@ public struct MigraineEntryView: View {
                 Text(viewModel.weatherStatusText())
                     .foregroundStyle((viewModel.didPullWeather || viewModel.showWeatherBackdateAlert) ? .primary : .secondary)
                     .font(.subheadline)
-                    .bold(!viewModel.didPullWeather && viewModel.weatherError != nil)
+                    .bold(!viewModel.didPullWeather && viewModel.weatherError != nil && !viewModel.weatherNeedsLocation)
 
                 Spacer()
             }
