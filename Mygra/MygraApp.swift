@@ -115,12 +115,15 @@ struct MygraApp: App {
                         if scenario == "cyclePressure" {
                             session.runDebugCyclePressureScenario()
                             session.writeDebugClinicalReport()
+                        } else if scenario == "store" {
+                            session.runDebugStoreScenario()
                         } else if scenario.hasPrefix("dash") {
                             session.runDebugDashboardScenario(scenario)
                         } else {
                             session.runDebugAttackScenario(scenario)
                         }
                     }
+                    session.applyDebugFlags()
                     switch UserDefaults.standard.string(forKey: "MygraDebugTab") {
                     case "settings": session.router.select(.settings)
                     case "calendar": session.router.select(.calendar)
