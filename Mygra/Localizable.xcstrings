@@ -13323,25 +13323,25 @@
       },
       "shouldGenerateSymbol" : false
     },
-    "Molargik Software LLC" : {
+    "Farside Software LLC" : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Molargik Software LLC"
+            "value" : "Farside Software LLC"
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Molargik Software LLC"
+            "value" : "Farside Software LLC"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Molargik Software LLC"
+            "value" : "Farside Software LLC"
           }
         }
       },
@@ -17517,25 +17517,25 @@
       },
       "shouldGenerateSymbol" : false
     },
-    "Publisher: Molargik Software LLC, opens website" : {
+    "Publisher: Farside Software LLC, opens website" : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Editor: Molargik Software LLC, abre el sitio web"
+            "value" : "Editor: Farside Software LLC, abre el sitio web"
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Éditeur : Molargik Software LLC, ouvre le site Web"
+            "value" : "Éditeur : Farside Software LLC, ouvre le site Web"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "発行者：Molargik Software LLC、Web サイトを開きます"
+            "value" : "発行者：Farside Software LLC、Web サイトを開きます"
           }
         }
       },

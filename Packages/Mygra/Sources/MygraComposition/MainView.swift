@@ -30,9 +30,28 @@ struct MainView: View {
 
     let session: SessionController
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     @State private var navigation = NavigationModel()
+    /// The page shown in the unfolded Duo's Settings split view.
+    @State private var settingsSelection: SettingsDestination? = .profile
 
     private var router: AppRouter { session.router }
+
+    /// The unfolded iPhone Duo shows Settings as a split view (list left of the hinge, the
+    /// selected page right of it). DEBUG: `-MygraDebugForceSplit YES` shows it on any
+    /// regular-width device so it can be checked without an unfolded Duo.
+    private var usesSettingsSplitView: Bool {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "MygraDebugForceSplit") { return horizontalSizeClass == .regular }
+        #endif
+        return PhoneDuo.isDuo && horizontalSizeClass == .regular
+    }
+
+    /// The Duo's tab bar is a vertical strip on the trailing edge, so the system bottom
+    /// accessory (which spans the window and would run under the hinge) is replaced there by
+    /// a strip kept in the leading pane.
+    private var showsStatusStrip: Bool { router.selectedTab != .settings }
 
     var body: some View {
         @Bindable var router = router
@@ -66,15 +85,14 @@ struct MainView: View {
             }
 
             Tab(AppTab.settings.title, systemImage: AppTab.settings.systemImage, value: .settings) {
-                NavigationStack(path: $navigation.settingsPath) {
-                    SettingsView()
-                        .navigationTitle(AppTab.settings.title)
-                        .navigationDestination(for: SettingsDestination.self) { destination in
-                            switch destination {
-                            case .tags: TagManagementView()
-                            case .dashboardStats: DashboardStatsSettingsView()
-                            }
-                        }
+                if usesSettingsSplitView {
+                    SettingsSplitView(selection: $settingsSelection)
+                } else {
+                    NavigationStack(path: $navigation.settingsPath) {
+                        SettingsView()
+                            .navigationTitle(AppTab.settings.title)
+                            .navigationDestination(for: SettingsDestination.self) { SettingsDestinationView(destination: $0) }
+                    }
                 }
             }
         }
@@ -82,9 +100,18 @@ struct MainView: View {
         .minimizeTabBarOnScrollIfAvailable()
         // The status strip carries the Log action, so it only belongs on the tabs where
         // logging happens; on Settings it just covers section text.
-        .tabViewBottomAccessoryIfAvailable(isEnabled: router.selectedTab != .settings) {
+        .tabViewBottomAccessoryIfAvailable(isEnabled: showsStatusStrip && !PhoneDuo.isDuo) {
             if #available(iOS 26.0, *) {
                 MigraineStatusAccessory(
+                    ongoing: migraineData.ongoingMigraine,
+                    onOpenOngoing: { id in navigateToMigraine(id: id) },
+                    onLog: handleAddTapped
+                )
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if PhoneDuo.isDuo, showsStatusStrip, #available(iOS 26.0, *) {
+                DuoStatusStrip(
                     ongoing: migraineData.ongoingMigraine,
                     onOpenOngoing: { id in navigateToMigraine(id: id) },
                     onLog: handleAddTapped
@@ -204,7 +231,8 @@ struct MainView: View {
         case .newMigraine: handleAddTapped()
         case .home, .calendar, .list, .settings: break // the router already selected the tab
         case .tags:
-            navigation.settingsPath = NavigationPath([SettingsDestination.tags])
+            settingsSelection = .tags
+            navigation.settingsPath = usesSettingsSplitView ? NavigationPath() : NavigationPath([SettingsDestination.tags])
         case .migraine(let id): navigateToMigraine(id: id)
         case .assistant:
             guard #available(iOS 26.0, *), insights.supportsAppleIntelligence else { break }
@@ -347,6 +375,42 @@ private struct MigraineStatusAccessory: View {
         .padding(.horizontal, isInline ? Brand.Space.xs : Brand.Space.sm)
         .accessibilityIdentifier("accessoryLogButton")
         .accessibilityLabel(Text("Log a new migraine"))
+    }
+}
+
+// MARK: - Duo status strip
+
+/// The status accessory on the iPhone Duo, where the tab bar is a vertical strip on the
+/// trailing edge. It is an ordinary bottom inset (which already stops short of that strip),
+/// and when the device is open it stays inside the leading pane so nothing sits on the hinge.
+@available(iOS 26.0, *)
+private struct DuoStatusStrip: View {
+    let ongoing: Migraine?
+    let onOpenOngoing: (UUID) -> Void
+    let onLog: () -> Void
+
+    @State private var layout = LayoutProbe()
+
+    var body: some View {
+        Color.clear
+            .frame(height: 52)
+            .overlay {
+                let chip = MigraineStatusAccessory(ongoing: ongoing, onOpenOngoing: onOpenOngoing, onLog: onLog)
+                    .padding(.horizontal, Brand.Space.sm)
+                if let fold = layout.foldCenterX {
+                    // Open: centered in the leading pane, clear of the hinge.
+                    chip
+                        .frame(width: min(max(0, fold - Brand.Space.xl * 2), 360))
+                        .glassEffect(.regular, in: Capsule())
+                        .frame(width: fold)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    chip
+                        .glassEffect(.regular, in: Capsule())
+                        .padding(.horizontal, Brand.Space.sm)
+                }
+            }
+            .onGeometryChange(for: LayoutProbe.self) { LayoutProbe($0) } action: { layout = $0 }
     }
 }
 
