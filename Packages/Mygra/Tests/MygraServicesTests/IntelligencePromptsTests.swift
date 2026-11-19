@@ -25,7 +25,7 @@ struct IntelligencePromptsTests {
         #expect(prompt.contains("Selected triggers: Stress, deadline"))
         #expect(prompt.contains("Foods: Coffee"))
         #expect(prompt.contains("sleep=5.5h"))
-        #expect(prompt.contains("condition=rain"))
+        #expect(prompt.contains(", rain"))
         #expect(prompt.contains("Note: Long day"))
     }
 

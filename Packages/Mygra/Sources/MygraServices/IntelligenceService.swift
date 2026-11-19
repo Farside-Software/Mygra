@@ -256,6 +256,17 @@ public enum IntelligencePrompts {
         return date.formatted(style)
     }
 
+    /// "mostlyCloudy" -> "mostly cloudy": raw enum names must not reach the model's prompt, or
+    /// it can echo them into the summary the person reads.
+    static func plainWords(_ camelCase: String) -> String {
+        var words = ""
+        for character in camelCase {
+            if character.isUppercase, !words.isEmpty { words.append(" ") }
+            words.append(character)
+        }
+        return words.lowercased()
+    }
+
     public static func chatGreeting(entryCount: Int) -> String {
         if entryCount == 0 {
             return String(localized: "You haven’t logged any migraines yet. Once you do, I can describe patterns in your logs. What would you like to know?")
@@ -293,8 +304,9 @@ public enum IntelligencePrompts {
             if !bits.isEmpty { lines.append("Health: " + bits.joined(separator: ", ")) }
         }
         if let weather = migraine.weather {
-            lines.append(String(format: "Weather: %.0f hPa, %.0f%% humidity, %.0f°C, condition=%@",
-                                weather.barometricPressureHpa, weather.humidityPercent, weather.temperatureCelsius, weather.condition.rawValue))
+            lines.append(String(format: "Weather: %.0f hPa, %.0f%% humidity, %.0f°C, %@",
+                                weather.barometricPressureHpa, weather.humidityPercent, weather.temperatureCelsius,
+                                Self.plainWords(weather.condition.rawValue)))
         }
         if let note = migraine.note, !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             lines.append("Note: \(note)")
