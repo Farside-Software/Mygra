@@ -67,7 +67,9 @@ struct MygraApp: App {
 
         // The Live Activity's buttons (pain up/down, end migraine) run here, in the app
         // process, even when the app is in the background.
-        AppDependencyManager.shared.add(dependency: MigraineLiveActivityActions(
+        // Built here, on the main actor, and registered as a value: constructing it inside the
+        // `add(dependency:)` autoclosure would run its main-actor initializer in a nonisolated one.
+        let liveActivityActions = MigraineLiveActivityActions(
             changePain: { [session] delta in
                 Log.liveActivity.info("Live Activity pain button: \(delta)")
                 guard let ongoing = try? session.loadMigraines().first(where: \.isOngoing) else { return }
@@ -79,7 +81,8 @@ struct MygraApp: App {
                 session.attackMode.endAttack()
                 session.statusSync.syncNow()
             }
-        ))
+        )
+        AppDependencyManager.shared.add(dependency: liveActivityActions)
 
         if !Self.isRunningTests {
             BackgroundWeatherRefresh.register(session: session)
