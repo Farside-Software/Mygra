@@ -15,6 +15,8 @@
 //        triggers, tags, medication, weather and Health snapshots on the recent ones, a pressure
 //        series with drops, canned period days, one pinned migraine, and Health connected. The
 //        newest migraine ended about two days ago. Pair with `-Plus.grandfathered YES`.
+//  - `-MygraDebugStoreNoCycle YES` / `-MygraDebugStoreNoPressure YES`  with `store`: leave out the period days (no cycle
+//        Quick Bit) / the pressure series (no forecast row), for recordings that must not show them.
 //  - `-MygraDebugHealth connected`                   canned Health stats and a connected state, with ANY scenario.
 //  - `-MygraDebugOngoing YES`                        adds an ongoing migraine started 1 h 20 min ago with three
 //        readings (Attack Mode and Live Activity captures), unless one is already ongoing.
@@ -79,7 +81,10 @@ extension SessionController {
         for offset in periodStartOffsets {
             for extra in 0..<5 { flowDays.append(day(offset + extra, hour: 0)) }
         }
-        cycleData.installDebugFlowDays(flowDays)
+        // Marketing recordings that must not show the cycle Quick Bit: `-MygraDebugStoreNoCycle YES`.
+        if !UserDefaults.standard.bool(forKey: "MygraDebugStoreNoCycle") {
+            cycleData.installDebugFlowDays(flowDays)
+        }
 
         // Attacks: most start in the window around a period start, a few elsewhere.
         let attackOffsets = [-144, -118, -90, -88, -62, -60, -34, -32, -130, -75, -45, -20]
@@ -102,7 +107,9 @@ extension SessionController {
             p -= 6.5 * smooth((hour - 2) / 10)
             return p
         }
-        let series = (-168...48).map { PressureSample(date: now.addingTimeInterval(Double($0) * 3600), hpa: hpa(Double($0))) }
+        // `-MygraDebugStoreNoPressure YES` leaves the pressure series out (no forecast row on the weather card).
+        let noPressure = UserDefaults.standard.bool(forKey: "MygraDebugStoreNoPressure")
+        let series = noPressure ? [] : (-168...48).map { PressureSample(date: now.addingTimeInterval(Double($0) * 3600), hpa: hpa(Double($0))) }
         weatherManager.installDebugWeather(
             reading: WeatherReading(
                 temperature: Measurement(value: 64, unit: .fahrenheit),
@@ -320,7 +327,10 @@ extension SessionController {
         for offset in [-117, -89, -61, -33, -5] {
             for extra in 0..<5 { flowDays.append(day(offset + extra)) }
         }
-        cycleData.installDebugFlowDays(flowDays)
+        // Marketing recordings that must not show the cycle Quick Bit: `-MygraDebugStoreNoCycle YES`.
+        if !UserDefaults.standard.bool(forKey: "MygraDebugStoreNoCycle") {
+            cycleData.installDebugFlowDays(flowDays)
+        }
 
         // Pressure: drops ahead of the newest attack and one a week earlier, one forecast.
         func smooth(_ x: Double) -> Double { let t = min(max(x, 0), 1); return t * t * (3 - 2 * t) }
@@ -331,7 +341,9 @@ extension SessionController {
             p -= 6.5 * smooth((hour - 3) / 10)
             return p
         }
-        let series = (-168...48).map { PressureSample(date: now.addingTimeInterval(Double($0) * 3600), hpa: hpa(Double($0))) }
+        // `-MygraDebugStoreNoPressure YES` leaves the pressure series out (no forecast row on the weather card).
+        let noPressure = UserDefaults.standard.bool(forKey: "MygraDebugStoreNoPressure")
+        let series = noPressure ? [] : (-168...48).map { PressureSample(date: now.addingTimeInterval(Double($0) * 3600), hpa: hpa(Double($0))) }
         weatherManager.installDebugWeather(
             reading: WeatherReading(
                 temperature: Measurement(value: 57, unit: .fahrenheit),
