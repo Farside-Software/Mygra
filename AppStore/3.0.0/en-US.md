@@ -8,9 +8,9 @@ Mygra: Migraine Tracker
 
 Headache Diary & Trigger Log
 
-## Promotional text (162/170)
+## Promotional text (158/170)
 
-New dashboard, iPhone Duo support, and richer Siri shortcuts. Logging is free forever, with no account. Mygra Plus adds the Migraine Assistant, reports, and more.
+A calmer migraine journal with a richer free dashboard, iPhone Duo support and more Siri shortcuts. No account, no tracking. Plus adds the Migraine Assistant.
 
 ## Keywords (98/100 bytes, 98 characters)
 
@@ -46,6 +46,9 @@ SIRI AND SHORTCUTS
 
 MYGRA PLUS
 • The Migraine Assistant can now look up your actual entries, and its answers stream in as they are written. Everything still runs on your device.
+
+FIXES
+• Fixes crashes that could happen with the Apple Watch app, Apple Health reads, iCloud sync, and background weather checks.
 
 Logging, history, calendar, Apple Health, Apple Watch, Siri, and the new dashboard cards are free. Plus adds the Migraine Assistant, Quick Bits, weather alerts, Cycle Insights, PDF reports, and CSV export.
 

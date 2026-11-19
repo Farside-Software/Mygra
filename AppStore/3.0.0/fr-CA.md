@@ -8,9 +8,9 @@ Mygra : Journal de migraines
 
 Suivi des maux de tête
 
-## Promotional text (162/170)
+## Promotional text (167/170)
 
-Nouveau tableau de bord, prise en charge de l'iPhone Duo et plus de raccourcis Siri. Journal gratuit, sans compte. Mygra Plus ajoute l'Assistant migraine et plus.
+Un journal de migraines plus apaisant : tableau de bord gratuit enrichi, iPhone Duo et plus de raccourcis Siri. Sans compte ni suivi. Plus ajoute l'Assistant migraine.
 
 ## Keywords (98/100 bytes, 90 characters)
 
@@ -46,6 +46,9 @@ SIRI ET RACCOURCIS
 
 MYGRA PLUS
 • L'Assistant migraine peut maintenant consulter vos entrées réelles, et ses réponses s'affichent au fur et à mesure. Tout reste sur votre appareil.
+
+CORRECTIFS
+• Corrige des plantages qui pouvaient survenir avec l'app Apple Watch, la lecture de Santé, la synchronisation iCloud et les vérifications météo en arrière-plan.
 
 La saisie, l'historique, le calendrier, Santé, l'Apple Watch, Siri et les nouvelles cartes du tableau de bord sont gratuits. Plus ajoute l'Assistant migraine, Quick Bits, les alertes météo, Cycle Insights, les rapports PDF et l'exportation CSV.
 

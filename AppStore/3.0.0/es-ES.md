@@ -8,9 +8,9 @@ Mygra: Diario de migrañas
 
 Registro de cefaleas y dolor
 
-## Promotional text (169/170)
+## Promotional text (166/170)
 
-Nuevo panel, compatibilidad con iPhone Duo y más atajos de Siri. Registrar es gratis para siempre, sin cuenta. Mygra Plus añade el Asistente de migrañas, informes y más.
+Un diario de migrañas más sereno, con un panel gratuito más completo, iPhone Duo y más atajos de Siri. Sin cuenta ni seguimiento. Plus añade el Asistente de migrañas.
 
 ## Keywords (95/100 bytes, 90 characters)
 
@@ -46,6 +46,9 @@ SIRI Y ATAJOS
 
 MYGRA PLUS
 • El Asistente de migrañas ahora puede consultar tus entradas reales y sus respuestas aparecen a medida que se escriben. Todo sigue ocurriendo en tu dispositivo.
+
+CORRECCIONES
+• Corrige cierres inesperados que podían ocurrir con la app del Apple Watch, las lecturas de Apple Salud, la sincronización de iCloud y las comprobaciones del tiempo en segundo plano.
 
 Registro, historial, calendario, Apple Salud, Apple Watch, Siri y las nuevas tarjetas del panel son gratis. Plus añade el Asistente de migrañas, Quick Bits, alertas meteorológicas, Cycle Insights, informes en PDF y exportación a CSV.
 
