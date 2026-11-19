@@ -53,39 +53,60 @@ struct MainView: View {
     /// a strip kept in the leading pane.
     private var showsStatusStrip: Bool { router.selectedTab != .settings }
 
+    /// On the iPhone Duo the status strip floats over each tab's navigation stack. Scrolling
+    /// content has to end clear of it, so every scroll view gets the strip's height as a
+    /// bottom content margin (the earlier safe-area-only clearance never reached the scroll
+    /// view, which left the last card under the strip).
+    @ViewBuilder
+    private func duoStatusStrip<Content: View>(_ content: Content) -> some View {
+        if PhoneDuo.isDuo, showsStatusStrip, #available(iOS 26.0, *) {
+            content
+                // Scroll views inside the tab's navigation stack (the page and any pushed
+                // detail) do not pick the inset up as a safe area, so the strip's height is
+                // also added as scroll content margin.
+                .contentMargins(.bottom, duoStripHeight + Brand.Space.sm, for: .scrollContent)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                DuoStatusStrip(
+                    ongoing: migraineData.ongoingMigraine,
+                    onOpenOngoing: { id in navigateToMigraine(id: id) },
+                    onLog: handleAddTapped
+                )
+            }
+        } else {
+            content
+        }
+    }
+
     var body: some View {
         @Bindable var router = router
         @Bindable var paywall = session.paywall
         @Bindable var attackMode = attackMode
         TabView(selection: $router.selectedTab) {
             Tab(AppTab.dashboard.title, systemImage: AppTab.dashboard.systemImage, value: .dashboard) {
-                NavigationStack(path: $navigation.dashboardPath) {
+                duoStatusStrip(NavigationStack(path: $navigation.dashboardPath) {
                     DashboardView()
                         .navigationTitle("Mygra")
                         .statusSubtitle()
                         .newMigraineToolbarIfNeeded(self)
                         .navigationDestination(for: UUID.self, destination: migraineDestination)
-                }
-                .duoStripClearance(isEnabled: showsStatusStrip)
+                })
             }
 
             Tab(AppTab.calendar.title, systemImage: AppTab.calendar.systemImage, value: .calendar) {
-                NavigationStack(path: $navigation.calendarPath) {
+                duoStatusStrip(NavigationStack(path: $navigation.calendarPath) {
                     MigraineCalendarView()
                         .newMigraineToolbarIfNeeded(self)
                         .navigationDestination(for: UUID.self, destination: migraineDestination)
-                }
-                .duoStripClearance(isEnabled: showsStatusStrip)
+                })
             }
 
             Tab(AppTab.list.title, systemImage: AppTab.list.systemImage, value: .list) {
-                NavigationStack(path: $navigation.listPath) {
+                duoStatusStrip(NavigationStack(path: $navigation.listPath) {
                     MigraineListView()
                         .navigationTitle(AppTab.list.title)
                         .newMigraineToolbarIfNeeded(self)
                         .navigationDestination(for: UUID.self, destination: migraineDestination)
-                }
-                .duoStripClearance(isEnabled: showsStatusStrip)
+                })
             }
 
             Tab(AppTab.settings.title, systemImage: AppTab.settings.systemImage, value: .settings) {
@@ -108,15 +129,6 @@ struct MainView: View {
         .tabViewBottomAccessoryIfAvailable(isEnabled: showsStatusStrip && !PhoneDuo.isDuo) {
             if #available(iOS 26.0, *) {
                 MigraineStatusAccessory(
-                    ongoing: migraineData.ongoingMigraine,
-                    onOpenOngoing: { id in navigateToMigraine(id: id) },
-                    onLog: handleAddTapped
-                )
-            }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if PhoneDuo.isDuo, showsStatusStrip, #available(iOS 26.0, *) {
-                DuoStatusStrip(
                     ongoing: migraineData.ongoingMigraine,
                     onOpenOngoing: { id in navigateToMigraine(id: id) },
                     onLog: handleAddTapped
@@ -391,7 +403,7 @@ private struct MigraineStatusAccessory: View {
 private let duoStripHeight: CGFloat = 52
 
 /// The status accessory on the iPhone Duo, where the tab bar is a vertical strip on the
-/// trailing edge. It is an ordinary bottom inset (which already stops short of that strip),
+/// trailing edge. It is an ordinary bottom inset of each tab (which already stops short of that strip),
 /// and when the device is open it stays inside the leading pane so nothing sits on the hinge.
 @available(iOS 26.0, *)
 private struct DuoStatusStrip: View {
@@ -423,24 +435,6 @@ private struct DuoStatusStrip: View {
                 }
             }
             .containerLayoutProbe { layout = $0 }
-    }
-}
-
-// MARK: - Strip clearance
-
-private extension View {
-    /// Keeps the Duo's status strip from covering the end of a tab's scrolling content: the
-    /// strip floats over the page, and the system does not inset tab content for it, so the
-    /// page reserves the strip's height as a bottom safe-area inset.
-    @ViewBuilder
-    func duoStripClearance(isEnabled: Bool) -> some View {
-        if PhoneDuo.isDuo, isEnabled {
-            safeAreaInset(edge: .bottom, spacing: 0) {
-                Color.clear.frame(height: duoStripHeight + Brand.Space.sm)
-            }
-        } else {
-            self
-        }
     }
 }
 
