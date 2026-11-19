@@ -300,21 +300,63 @@
       "shouldGenerateSymbol" : false,
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld días desde la última migraña"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld día desde la última migraña"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld días desde la última migraña"
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld jours depuis la dernière migraine"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jour depuis la dernière migraine"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jours depuis la dernière migraine"
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "最後の片頭痛から %lld 日"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld day since last migraine"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld days since last migraine"
+                }
+              }
+            }
           }
         }
       }

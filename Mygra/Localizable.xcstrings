@@ -695,21 +695,63 @@
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld días"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld día"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld días"
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld jours"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jours"
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld 日"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld days"
+                }
+              }
+            }
           }
         }
       },
@@ -719,21 +761,63 @@
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld horas"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hora"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld horas"
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld heures"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld heure"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld heures"
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld時間"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld hours"
+                }
+              }
+            }
           }
         }
       },
@@ -9353,21 +9437,63 @@
     "It's been %lld days since your last migraine." : {
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Han pasado %lld días desde tu última migraña."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Ha pasado %lld día desde tu última migraña."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Han pasado %lld días desde tu última migraña."
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cela fait %lld jours depuis votre dernière migraine."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Cela fait %lld jour depuis votre dernière migraine."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Cela fait %lld jours depuis votre dernière migraine."
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "最後の片頭痛から %lld 日経ちました。"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "It's been %lld day since your last migraine."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "It's been %lld days since your last migraine."
+                }
+              }
+            }
           }
         }
       }
@@ -9398,21 +9524,63 @@
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "He cargado tu historial de migrañas y tu perfil, incluidas tus últimas %lld entradas. Puedo analizar patrones y tendencias en tus registros. ¿Qué quieres explorar?"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "He cargado tu historial de migrañas y tu perfil, incluida tu única entrada. Puedo analizar patrones y tendencias en tus registros. ¿Qué quieres explorar?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "He cargado tu historial de migrañas y tu perfil, incluidas tus últimas %lld entradas. Puedo analizar patrones y tendencias en tus registros. ¿Qué quieres explorar?"
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "J’ai chargé votre historique de migraines et votre profil, y compris vos %lld dernières entrées. Je peux analyser les tendances de vos journaux. Que souhaitez-vous explorer?"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "J’ai chargé votre historique de migraines et votre profil, y compris votre unique entrée. Je peux analyser les tendances de vos journaux. Que souhaitez-vous explorer?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "J’ai chargé votre historique de migraines et votre profil, y compris vos %lld dernières entrées. Je peux analyser les tendances de vos journaux. Que souhaitez-vous explorer?"
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "直近 %lld 件を含む片頭痛の履歴とプロフィールを読み込みました。記録のパターンや傾向を分析できます。何を調べましょうか？"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "I’ve loaded your migraine history and profile, including your only entry. I can analyze patterns and trends in your logs. What would you like to explore?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "I’ve loaded your migraine history and profile, including your last %lld entries. I can analyze patterns and trends in your logs. What would you like to explore?"
+                }
+              }
+            }
           }
         }
       },
@@ -9564,6 +9732,24 @@
               }
             }
           }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Last migraine %lld day ago"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Last migraine %lld days ago"
+                }
+              }
+            }
+          }
         }
       },
       "shouldGenerateSymbol" : false
@@ -9614,6 +9800,24 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "最後の片頭痛は%lld時間前"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Last migraine %lld hour ago"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Last migraine %lld hours ago"
                 }
               }
             }
@@ -10612,19 +10816,91 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MIDAS: %lld días perdidos, %@%@"
+            "value" : "MIDAS: %#@days@, %2$@%3$@"
+          },
+          "substitutions" : {
+            "days" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg día perdido"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg días perdidos"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MIDAS : %lld jours perdus, %@%@"
+            "value" : "MIDAS : %#@days@, %2$@%3$@"
+          },
+          "substitutions" : {
+            "days" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jour perdu"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jours perdus"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "MIDAS：損失日数%lld日、%@%@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MIDAS: %#@days@ lost, %2$@%3$@"
+          },
+          "substitutions" : {
+            "days" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg day"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg days"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -12644,21 +12920,63 @@
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No hay ninguna migraña en curso. Han pasado %lld días desde la última."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "No hay ninguna migraña en curso. Ha pasado %lld día desde la última."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "No hay ninguna migraña en curso. Han pasado %lld días desde la última."
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune migraine en cours. Cela fait %lld jours depuis la dernière."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aucune migraine en cours. Cela fait %lld jour depuis la dernière."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aucune migraine en cours. Cela fait %lld jours depuis la dernière."
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "進行中の片頭痛はありません。前回から %lld 日経ちました。"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "No migraine in progress. It's been %lld day since your last one."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "No migraine in progress. It's been %lld days since your last one."
+                }
+              }
+            }
           }
         }
       },
@@ -12734,6 +13052,24 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld日間、片頭痛なし"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "No migraines in %lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "No migraines in %lld days"
                 }
               }
             }
@@ -22033,21 +22369,63 @@
       "shouldGenerateSymbol" : false,
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld días desde tu última migraña"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld día desde tu última migraña"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld días desde tu última migraña"
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld jours depuis votre dernière migraine"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jour depuis votre dernière migraine"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld jours depuis votre dernière migraine"
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "最後の片頭痛から %lld 日"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld day since your last migraine"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld days since your last migraine"
+                }
+              }
+            }
           }
         }
       }
@@ -22059,19 +22437,151 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld días con migraña. Mayor racha sin ninguna: %lld días."
+            "value" : "%#@mdays@ con migraña. Mayor racha sin ninguna: %#@sdays@."
+          },
+          "substitutions" : {
+            "mdays" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg día"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg días"
+                    }
+                  }
+                }
+              }
+            },
+            "sdays" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg día"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg días"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld jours avec migraine. Plus longue période sans migraine : %lld jours."
+            "value" : "%#@mdays@ avec migraine. Plus longue période sans migraine : %#@sdays@."
+          },
+          "substitutions" : {
+            "mdays" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jour"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jours"
+                    }
+                  }
+                }
+              }
+            },
+            "sdays" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jour"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jours"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "片頭痛があった日：%lld 日。片頭痛のない最長期間：%lld 日。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%#@mdays@ with a migraine. Longest stretch without one: %#@sdays@."
+          },
+          "substitutions" : {
+            "mdays" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg day"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg days"
+                    }
+                  }
+                }
+              }
+            },
+            "sdays" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg day"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg days"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -22225,21 +22735,63 @@
       "shouldGenerateSymbol" : false,
       "localizations" : {
         "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entre las %lld migrañas que has registrado."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Entre la %lld migraña que has registrado."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Entre las %lld migrañas que has registrado."
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parmi les %lld migraines que vous avez consignées."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Parmi la %lld migraine que vous avez consignée."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Parmi les %lld migraines que vous avez consignées."
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "これまでに記録した %lld 件の片頭痛について。"
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Across the %lld migraine you have logged."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "Across the %lld migraines you have logged."
+                }
+              }
+            }
           }
         }
       }
@@ -26115,19 +26667,91 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu última migraña fue %1$@, hace %2$lld días, con nivel de dolor %3$lld de 10."
+            "value" : "Tu última migraña fue %1$@, hace %#@days@, con nivel de dolor %3$lld de 10."
+          },
+          "substitutions" : {
+            "days" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg día"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg días"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Votre dernière migraine était %1$@, il y a %2$lld jours, à un niveau de douleur de %3$lld sur 10."
+            "value" : "Votre dernière migraine était %1$@, il y a %#@days@, à un niveau de douleur de %3$lld sur 10."
+          },
+          "substitutions" : {
+            "days" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jour"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg jours"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "最後の片頭痛は %1$@（%2$lld 日前）、痛みのレベルは 10 点中 %3$lld でした。"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your last migraine was %1$@, %#@days@ ago, at pain level %3$lld of 10."
+          },
+          "substitutions" : {
+            "days" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg day"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "new",
+                      "value" : "%arg days"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
