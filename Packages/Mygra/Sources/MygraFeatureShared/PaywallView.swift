@@ -26,6 +26,10 @@ public struct PaywallView: View {
 
     @State private var isPurchasingLifetime = false
     @State private var isRestoring = false
+    /// A wide, landscape-shaped sheet (iPad in landscape or a wide window). StoreKit gives the
+    /// marketing area only what is left above its controls, which in a short sheet is just the
+    /// icon, so there the pitch and the features get their own scrolling column beside the store.
+    @State private var isWide = false
 
     public static let privacyURL = Company.privacy
     public static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
@@ -71,20 +75,51 @@ public struct PaywallView: View {
     // MARK: - Store
 
     private var store: some View {
-        VStack(spacing: 0) {
-            SubscriptionStoreView(productIDs: PlusProduct.subscriptionProductIDs) {
-                marketing
-            }
-            .subscriptionStoreControlStyle(.prominentPicker)
-            .subscriptionStoreButtonLabel(.multiline)
-            .storeButton(.visible, for: .restorePurchases)
-            .storeButton(.hidden, for: .cancellation)
-            .subscriptionStorePolicyDestination(url: Self.privacyURL, for: .privacyPolicy)
-            .subscriptionStorePolicyDestination(url: Self.termsURL, for: .termsOfService)
-            .onInAppPurchaseCompletion { _, result in
-                await handleStorePurchase(result)
-            }
+        Group {
+            if isWide {
+                HStack(alignment: .top, spacing: 0) {
+                    ScrollView {
+                        marketing
+                            .padding(.bottom, Brand.Space.lg)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
+                    .frame(maxWidth: .infinity)
 
+                    VStack(spacing: 0) {
+                        subscriptionStore { Color.clear.frame(height: 0) }
+                        purchaseFooter
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            } else {
+                VStack(spacing: 0) {
+                    subscriptionStore { marketing }
+                    purchaseFooter
+                }
+            }
+        }
+        .onGeometryChange(for: Bool.self) { proxy in
+            proxy.size.width >= 700 && proxy.size.width > proxy.size.height
+        } action: { isWide = $0 }
+    }
+
+    private func subscriptionStore<Marketing: View>(@ViewBuilder marketing: () -> Marketing) -> some View {
+        SubscriptionStoreView(productIDs: PlusProduct.subscriptionProductIDs) {
+            marketing()
+        }
+        .subscriptionStoreControlStyle(.prominentPicker)
+        .subscriptionStoreButtonLabel(.multiline)
+        .storeButton(.visible, for: .restorePurchases)
+        .storeButton(.hidden, for: .cancellation)
+        .subscriptionStorePolicyDestination(url: Self.privacyURL, for: .privacyPolicy)
+        .subscriptionStorePolicyDestination(url: Self.termsURL, for: .termsOfService)
+        .onInAppPurchaseCompletion { _, result in
+            await handleStorePurchase(result)
+        }
+    }
+
+    private var purchaseFooter: some View {
+        VStack(spacing: 0) {
             lifetimeRow
                 .padding(.horizontal, Brand.Space.lg)
                 .padding(.bottom, Brand.Space.sm)
