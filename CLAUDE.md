@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Mygra is a migraine-tracking app (migraines → intensity samples, with Health and weather snapshots, user tags, and rule-based + Apple Intelligence insights) built with SwiftUI + SwiftData and iCloud/CloudKit private-database sync. It ships an iOS app, a days-since-last-migraine home-screen widget, an ongoing-migraine Live Activity, and an Apple Watch companion with its own complication.
 
-The app is a **thin app target on top of an SPM umbrella package** (`Packages/Mygra`) of layered, single-responsibility modules — the same clean architecture as Stork/Waffle/SetDeck/SCOUT. Dependencies point **inward**: features depend on the design system and core; data implements core's protocols; **core depends on nothing** (Foundation + SwiftData only).
+The app is a **thin app target on top of an SPM umbrella package** (`Packages/Mygra`) of layered, single-responsibility modules — the same clean architecture as Stork/Waffle/SetDeck. Dependencies point **inward**: features depend on the design system and core; data implements core's protocols; **core depends on nothing** (Foundation + SwiftData only).
 
 ## Build & Run
 
